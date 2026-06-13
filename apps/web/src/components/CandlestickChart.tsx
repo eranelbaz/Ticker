@@ -6,7 +6,7 @@ import {
   type ISeriesApi,
   type UTCTimestamp,
 } from 'lightweight-charts';
-import type { Candle } from '../types';
+import type { Candle } from '@ticker/server';
 
 export function CandlestickChart({ candles }: { candles: Candle[] }) {
   const containerRef = useRef<HTMLDivElement>(null);

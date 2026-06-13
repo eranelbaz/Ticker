@@ -5,6 +5,13 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "types": "dist/api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/api.d.ts",
+      "default": "./dist/main.js"
+    }
+  },
   "scripts": {
     "dev": "nest start --watch",
     "build": "nest build",

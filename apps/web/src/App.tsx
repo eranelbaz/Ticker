@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchCandles } from './api/candles';
 import { CandlestickChart } from './components/CandlestickChart';
-import type { Candle } from './types';
+import type { Candle } from '@ticker/server';
 
 const DEFAULT_SYMBOL = 'BTCUSD';
 const DEFAULT_COUNT = 300;
