@@ -9,12 +9,29 @@ const DEFAULT_COUNT = 300;
 export default function App() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     fetchCandles(DEFAULT_SYMBOL, DEFAULT_COUNT)
-      .then(setCandles)
-      .catch((err: Error) => setError(err.message));
+      .then((data) => {
+        if (!cancelled) {
+          setCandles(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError((err as Error).message);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  if (isLoading) return <div className="fixed inset-0 bg-chart-bg" />;
 
   if (error) {
     return (

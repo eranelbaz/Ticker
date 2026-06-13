@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   DefaultValuePipe,
   Get,
@@ -17,11 +18,15 @@ export class CandlesController {
   constructor(private readonly candlesService: CandlesService) {}
 
   @Get(':symbol')
-  async getCandles(
+  getCandles(
     @Param('symbol') symbol: string,
     @Query('count', new DefaultValuePipe(300), ParseIntPipe) count: number,
-  ): Promise<Candle[]> {
-    const clamped = Math.min(Math.max(count, MIN_COUNT), MAX_COUNT);
-    return this.candlesService.getCandles(symbol, clamped);
+  ): Candle[] {
+    if (count < MIN_COUNT || count > MAX_COUNT) {
+      throw new BadRequestException(
+        `count must be between ${MIN_COUNT} and ${MAX_COUNT}`,
+      );
+    }
+    return this.candlesService.getCandles(symbol, count);
   }
 }

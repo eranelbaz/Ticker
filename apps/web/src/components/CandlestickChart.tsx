@@ -7,6 +7,7 @@ import {
   type UTCTimestamp,
 } from 'lightweight-charts';
 import type { Candle } from '@ticker/server';
+import { chartTheme } from '../config/chartTheme';
 
 export function CandlestickChart({ candles }: { candles: Candle[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -16,16 +17,15 @@ export function CandlestickChart({ candles }: { candles: Candle[] }) {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const css = getComputedStyle(document.documentElement);
     const chart = createChart(containerRef.current, {
       autoSize: true,
       layout: {
-        background: { color: css.getPropertyValue('--color-chart-bg').trim() },
-        textColor: css.getPropertyValue('--color-chart-text').trim(),
+        background: { color: chartTheme.bg },
+        textColor: chartTheme.text,
       },
       grid: {
-        vertLines: { color: css.getPropertyValue('--color-chart-grid').trim() },
-        horzLines: { color: css.getPropertyValue('--color-chart-grid').trim() },
+        vertLines: { color: chartTheme.grid },
+        horzLines: { color: chartTheme.grid },
       },
     });
     chartRef.current = chart;
@@ -43,7 +43,7 @@ export function CandlestickChart({ candles }: { candles: Candle[] }) {
 
     seriesRef.current.setData(
       candles.map((c) => ({
-        time: c.time as UTCTimestamp,
+        time: Math.floor(c.time) as UTCTimestamp,
         open: c.open,
         high: c.high,
         low: c.low,

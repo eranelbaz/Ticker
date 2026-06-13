@@ -5,14 +5,10 @@ const DAY_SECONDS = 86_400;
 
 @Injectable()
 export class CandlesService {
-  /**
-   * Generates sample daily candles as a random walk ending today.
-   * Placeholder until real market-data providers are integrated.
-   * `symbol` is accepted but unused until provider adapters land.
-   */
-  getCandles(symbol: string, count: number): Promise<Candle[]> {
+  getCandles(_symbol: string, count: number): Candle[] {
     const candles: Candle[] = [];
-    const end = Math.floor(Date.now() / 1000 / DAY_SECONDS) * DAY_SECONDS;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const end = Math.floor(nowSec / DAY_SECONDS) * DAY_SECONDS;
     let lastClose = 100;
 
     for (let i = count - 1; i >= 0; i--) {
@@ -32,6 +28,6 @@ export class CandlesService {
       lastClose = close;
     }
 
-    return Promise.resolve(candles);
+    return candles;
   }
 }

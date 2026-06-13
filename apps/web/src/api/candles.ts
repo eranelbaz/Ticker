@@ -5,8 +5,9 @@ export async function fetchCandles(
   symbol: string,
   count: number,
 ): Promise<Candle[]> {
-  const { data } = await axios.get<Candle[]>(`/api/candles/${symbol}`, {
-    params: { count },
-  });
+  const { data } = await axios.get<Candle[]>(
+    `/api/candles/${encodeURIComponent(symbol)}`,
+    { params: { count }, timeout: 10_000 },
+  );
   return data;
 }

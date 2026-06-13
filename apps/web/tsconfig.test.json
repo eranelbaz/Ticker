@@ -1,6 +1,8 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
     "module": "CommonJS",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -9,5 +11,6 @@
     "allowJs": true,
     "types": ["jest", "@testing-library/jest-dom", "node"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": []
 }
