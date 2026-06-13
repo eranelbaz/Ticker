@@ -34,6 +34,8 @@ describe('App', () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Failed to load candles/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Failed to load candles/),
+    ).toBeInTheDocument();
   });
 });
