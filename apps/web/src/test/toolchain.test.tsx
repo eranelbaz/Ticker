@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from './server';
 
-test('MSW handler, fetch, and jest-dom all work', async () => {
+it('MSW handler, fetch, and jest-dom all work', async () => {
   server.use(
     http.get('*/ping', () => HttpResponse.json({ ok: true })),
   );

@@ -16,15 +16,16 @@ export function CandlestickChart({ candles }: { candles: Candle[] }) {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const css = getComputedStyle(document.documentElement);
     const chart = createChart(containerRef.current, {
       autoSize: true,
       layout: {
-        background: { color: '#131722' },
-        textColor: '#d1d4dc',
+        background: { color: css.getPropertyValue('--color-chart-bg').trim() },
+        textColor: css.getPropertyValue('--color-chart-text').trim(),
       },
       grid: {
-        vertLines: { color: '#1e222d' },
-        horzLines: { color: '#1e222d' },
+        vertLines: { color: css.getPropertyValue('--color-chart-grid').trim() },
+        horzLines: { color: css.getPropertyValue('--color-chart-grid').trim() },
       },
     });
     chartRef.current = chart;

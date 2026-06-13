@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-chart-bg: #131722;
+  --color-chart-text: #d1d4dc;
+  --color-chart-grid: #1e222d;
+}
+
 html,
 body,
 #root {

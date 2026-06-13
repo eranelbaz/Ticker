@@ -25,7 +25,7 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#131722] text-[#d1d4dc]">
+    <div className="fixed inset-0 bg-chart-bg text-chart-text">
       <CandlestickChart candles={candles} />
     </div>
   );
