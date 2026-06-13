@@ -15,7 +15,7 @@ jest.mock('lightweight-charts', () => ({
   CandlestickSeries: Symbol('CandlestickSeries'),
 }));
 
-import type { Candle } from '../types';
+import type { Candle } from '@ticker/server';
 import { CandlestickChart } from './CandlestickChart';
 
 const candles: Candle[] = [

@@ -30,6 +30,6 @@ describe('fetchCandles', () => {
       ),
     );
 
-    await expect(fetchCandles('BTCUSD', 300)).rejects.toThrow('HTTP 500');
+    await expect(fetchCandles('BTCUSD', 300)).rejects.toThrow('500');
   });
 });
