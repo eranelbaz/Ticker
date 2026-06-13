@@ -19,4 +19,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/**/*.test.{ts,tsx}', 'src/test/**/*.ts'],
+    languageOptions: {
+      globals: { ...globals.jest, ...globals.node },
+    },
+  },
 ])
