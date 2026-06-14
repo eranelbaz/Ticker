@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useDrawingTools } from '../hooks/useDrawingTools';
+import { useDrawingTools, type DrawingState } from '../hooks/useDrawingTools';
 import {
   CandlestickSeries,
   createChart,
@@ -16,10 +16,6 @@ import { RectanglePrimitive } from '../drawings/RectanglePrimitive';
 import { chartTheme } from '../config/chartTheme';
 
 type DrawingPrimitive = LinePrimitive | RectanglePrimitive;
-
-type DrawingState =
-  | { phase: 'idle'; finished: DrawingPrimitive[] }
-  | { phase: 'placing-p2'; p1: DrawingPoint; preview: DrawingPrimitive };
 
 interface Props {
   candles: Candle[];

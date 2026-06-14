@@ -6,7 +6,7 @@ import { RectanglePrimitive } from '../drawings/RectanglePrimitive';
 
 type DrawingPrimitive = LinePrimitive | RectanglePrimitive;
 
-type DrawingState =
+export type DrawingState =
   | { phase: 'idle'; finished: DrawingPrimitive[] }
   | { phase: 'placing-p2'; p1: DrawingPoint; preview: DrawingPrimitive };
 
