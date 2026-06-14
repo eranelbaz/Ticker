@@ -7,7 +7,6 @@ import type {
   PaneAttachedParameter,
   Time,
 } from 'lightweight-charts';
-import type { CanvasRenderingTarget2D } from 'fancy-canvas';
 import type { DrawingPoint } from './types';
 
 const LINE_COLOR = '#f59e0b';

@@ -1,4 +1,13 @@
+import { cn } from '../utils/cn';
 import type { DrawingTool } from '../drawings/types';
+import { LineIcon } from './icons/LineIcon';
+import { RectangleIcon } from './icons/RectangleIcon';
+
+const TOOL_ICONS: Record<DrawingTool, React.ReactNode> = {
+  line: <LineIcon />,
+  rectangle: <RectangleIcon />,
+};
+
 
 interface ToolButtonProps {
   label: string;
@@ -13,34 +22,21 @@ function ToolButton({ label, tool, active, onToggle }: ToolButtonProps) {
       aria-label={label}
       aria-pressed={active}
       onClick={() => onToggle(tool)}
-      className={[
-        'flex h-9 w-9 items-center justify-center rounded',
-        'text-chart-text transition-colors',
-        active
-          ? 'bg-blue-600'
-          : 'hover:bg-chart-grid',
-      ].join(' ')}
-    >
-      {tool === 'line' ? <LineIcon /> : <RectangleIcon />}
-    </button>
+       className={cn(
+         'flex h-9 w-9 items-center justify-center rounded',
+         'text-chart-text transition-colors',
+         active
+           ? 'bg-blue-600'
+           : 'hover:bg-chart-grid',
+       )}
+
+     >
+       {TOOL_ICONS[tool]}
+     </button>
+
   );
 }
 
-function LineIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <line x1="2" y1="14" x2="14" y2="2" />
-    </svg>
-  );
-}
-
-function RectangleIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="4" width="12" height="8" rx="0.5" />
-    </svg>
-  );
-}
 
 interface Props {
   activeTool: DrawingTool | null;

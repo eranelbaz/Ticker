@@ -33,7 +33,6 @@ export function CandlestickChart({ candles, activeTool = null }: Props) {
   const crosshairTimeRef = useRef<Time | null>(null);
   const crosshairPriceRef = useRef<number | null>(null);
 
-  // Initialize chart (runs once)
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -61,7 +60,6 @@ export function CandlestickChart({ candles, activeTool = null }: Props) {
     };
   }, []);
 
-  // Subscribe to drawing events when activeTool changes
   useEffect(() => {
     const chart = chartRef.current;
     const series = seriesRef.current;
@@ -151,7 +149,6 @@ export function CandlestickChart({ candles, activeTool = null }: Props) {
     };
   }, [activeTool]);
 
-  // Update candle data
   useEffect(() => {
     if (!seriesRef.current || candles.length === 0) return;
 
