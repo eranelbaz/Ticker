@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useDrawingTools } from '../hooks/useDrawingTools';
 import {
   CandlestickSeries,
   createChart,
@@ -33,6 +34,15 @@ export function CandlestickChart({ candles, activeTool = null }: Props) {
   const crosshairTimeRef = useRef<Time | null>(null);
   const crosshairPriceRef = useRef<number | null>(null);
 
+  useDrawingTools({
+    chart: chartRef.current,
+    series: seriesRef.current,
+    activeTool,
+    drawingStateRef,
+    crosshairTimeRef,
+    crosshairPriceRef,
+  });
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -59,95 +69,6 @@ export function CandlestickChart({ candles, activeTool = null }: Props) {
       seriesRef.current = null;
     };
   }, []);
-
-  useEffect(() => {
-    const chart = chartRef.current;
-    const series = seriesRef.current;
-    if (!chart || !series) return;
-
-    const onChartClick = (param: MouseEventParams) => {
-      if (!activeTool || param.point === undefined) {
-        return;
-      }
-
-      const price = series.coordinateToPrice(param.point.y);
-      if (price === null) {
-        return;
-      }
-
-      if (param.time === undefined) {
-        return;
-      }
-
-      const clickPoint: DrawingPoint = {
-        time: param.time as Time,
-        price: price,
-      };
-
-      if (drawingStateRef.current.phase === 'idle') {
-        drawingStateRef.current = {
-          phase: 'placing-p2',
-          p1: clickPoint,
-          preview: activeTool === 'line'
-            ? new LinePrimitive(series, clickPoint, clickPoint)
-            : new RectanglePrimitive(series, clickPoint, clickPoint),
-        };
-        chart.panes()[0].attachPrimitive(drawingStateRef.current.preview);
-        drawingStateRef.current.preview.updateAllViews();
-      } else if (drawingStateRef.current.phase === 'placing-p2') {
-        const finishedDrawing = activeTool === 'line'
-          ? new LinePrimitive(series, drawingStateRef.current.p1, clickPoint)
-          : new RectanglePrimitive(series, drawingStateRef.current.p1, clickPoint);
-
-        chart.panes()[0].detachPrimitive(drawingStateRef.current.preview);
-        chart.panes()[0].attachPrimitive(finishedDrawing);
-        finishedDrawing.updateAllViews();
-
-        const currentFinished = 
-          drawingStateRef.current.phase === 'idle' 
-            ? (drawingStateRef.current as any).finished 
-            : [];
-
-        drawingStateRef.current = {
-          phase: 'idle',
-          finished: [...(Array.isArray(currentFinished) ? currentFinished : []), finishedDrawing],
-        };
-      }
-    };
-
-    const onCrosshairMove = (param: MouseEventParams) => {
-      if (!activeTool || param.point === undefined) return;
-
-      if (param.time === undefined) return;
-
-      const price = series.coordinateToPrice(param.point.y);
-      if (price === null) return;
-
-      const movePoint: DrawingPoint = {
-        time: param.time as Time,
-        price: price,
-      };
-
-      crosshairTimeRef.current = movePoint.time;
-      crosshairPriceRef.current = movePoint.price;
-
-      if (drawingStateRef.current.phase === 'placing-p2') {
-        drawingStateRef.current.preview.setPoints(
-          drawingStateRef.current.p1,
-          movePoint,
-        );
-        drawingStateRef.current.preview.updateAllViews();
-      }
-    };
-
-    chart.subscribeClick(onChartClick);
-    chart.subscribeCrosshairMove(onCrosshairMove);
-
-    return () => {
-      chart.unsubscribeClick(onChartClick);
-      chart.unsubscribeCrosshairMove(onCrosshairMove);
-    };
-  }, [activeTool]);
 
   useEffect(() => {
     if (!seriesRef.current || candles.length === 0) return;

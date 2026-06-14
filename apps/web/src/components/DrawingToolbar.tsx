@@ -1,4 +1,4 @@
-import { cn } from '../utils/cn';
+import { classNameMerge } from '../utils/classNameMerge';
 import type { DrawingTool } from '../drawings/types';
 import { LineIcon } from './icons/LineIcon';
 import { RectangleIcon } from './icons/RectangleIcon';
@@ -22,7 +22,7 @@ function ToolButton({ label, tool, active, onToggle }: ToolButtonProps) {
       aria-label={label}
       aria-pressed={active}
       onClick={() => onToggle(tool)}
-       className={cn(
+        className={classNameMerge(
          'flex h-9 w-9 items-center justify-center rounded',
          'text-chart-text transition-colors',
          active
