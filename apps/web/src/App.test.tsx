@@ -2,9 +2,25 @@ import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from './test/server';
 
+type DrawingTool = 'line' | 'rectangle';
+
 jest.mock('./components/CandlestickChart', () => ({
-  CandlestickChart: ({ candles }: { candles: unknown[] }) => (
-    <div>{candles.length} candles loaded</div>
+  CandlestickChart: ({ activeTool }: { candles: unknown[]; activeTool?: DrawingTool | null }) => (
+    <div>drawing tool is {activeTool === null ? 'null' : activeTool} /div>
+  ),
+}));
+
+jest.mock('./components/DrawingToolbar', () => ({
+  DrawingToolbar: ({ 
+    onToolSelect,
+  }: { 
+    activeTool: DrawingTool | null;
+    onToolSelect: (tool: DrawingTool | null) => void;  
+  }) => (
+    <div>
+      <button data-testid="line-btn" onClick={() => onToolSelect('line')} /button> Line</button>{' '}
+      <button data-testid="rectangle-btn" onClick={() => onToolSelect('rectangle')} /button> Rectangle</button>
+    /div>
   ),
 }));
 
@@ -22,7 +38,7 @@ describe('App', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('1 candles loaded')).toBeInTheDocument();
+    expect(await screen.findByText('drawing tool is null')).toBeInTheDocument();
   });
 
   it('shows an error message when the request fails', async () => {

@@ -1,20 +1,57 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { render } from '@testing-library/react';
 
 const mockSetData = jest.fn();
 const mockFitContent = jest.fn();
 const mockRemove = jest.fn();
-const mockAddSeries = jest.fn(() => ({ setData: mockSetData }));
-const mockCreateChart = jest.fn(() => ({
-  addSeries: mockAddSeries,
+const mockSubscribeClick = jest.fn();
+const mockUnsubscribeClick = jest.fn();
+const mockSubscribeCrosshairMove = jest.fn();
+const mockUnsubscribeCrosshairMove = jest.fn();
+const mockCoordinateToPrice = jest.fn(() => 50);
+
+const mockSeries = {
+  setData: mockSetData,
+  coordinateToPrice: mockCoordinateToPrice,
+};
+
+const paneMock = {
+  attachPrimitive: jest.fn(),
+  detachPrimitive: jest.fn(),
+};
+
+const mockChart = {
+  addSeries: jest.fn(() => mockSeries),
   timeScale: () => ({ fitContent: mockFitContent }),
   remove: mockRemove,
-}));
+  subscribeClick: mockSubscribeClick,
+  unsubscribeClick: mockUnsubscribeClick,
+  subscribeCrosshairMove: mockSubscribeCrosshairMove,
+  unsubscribeCrosshairMove: mockUnsubscribeCrosshairMove,
+  panes: () => [paneMock],
+};
+
+const mockCreateChart = jest.fn(() => mockChart);
 
 jest.mock('lightweight-charts', () => ({
   createChart: mockCreateChart,
   CandlestickSeries: Symbol('CandlestickSeries'),
 }));
 
+// Primitives: stub setPoints to avoid real coordinate logic in these tests
+jest.mock('../drawings/LinePrimitive', () => ({
+  LinePrimitive: jest.fn().mockImplementation(() => ({ 
+    setPoints: jest.fn()
+  })),
+}));
+jest.mock('../drawings/RectanglePrimitive', () => ({
+  RectanglePrimitive: jest.fn().mockImplementation(() => ({ 
+    setPoints: jest.fn()
+  })),
+}));
+
+import { LinePrimitive } from '../drawings/LinePrimitive';
+import { RectanglePrimitive } from '../drawings/RectanglePrimitive';
 import type { Candle } from '@ticker/server';
 import { CandlestickChart } from './CandlestickChart';
 
@@ -29,13 +66,13 @@ describe('CandlestickChart', () => {
   });
 
   it('creates a chart with a candlestick series on mount', () => {
-    render(<CandlestickChart candles={candles} />);
+    render(<CandlestickChart candles={candles} activeTool={null} />);
     expect(mockCreateChart).toHaveBeenCalledTimes(1);
-    expect(mockAddSeries).toHaveBeenCalledTimes(1);
+    expect(mockChart.addSeries).toHaveBeenCalledTimes(1);
   });
 
   it('passes OHLC data to the series and fits the view', () => {
-    render(<CandlestickChart candles={candles} />);
+    render(<CandlestickChart candles={candles} activeTool={null} />);
     expect(mockSetData).toHaveBeenCalledWith([
       { time: 1, open: 10, high: 12, low: 9, close: 11 },
       { time: 2, open: 11, high: 13, low: 10, close: 12 },
@@ -44,13 +81,63 @@ describe('CandlestickChart', () => {
   });
 
   it('does not push data for an empty candle list', () => {
-    render(<CandlestickChart candles={[]} />);
+    render(<CandlestickChart candles={[]} activeTool={null} />);
     expect(mockSetData).not.toHaveBeenCalled();
   });
 
   it('removes the chart on unmount', () => {
-    const { unmount } = render(<CandlestickChart candles={candles} />);
+    const { unmount } = render(<CandlestickChart candles={candles} activeTool={null} />);
     unmount();
     expect(mockRemove).toHaveBeenCalledTimes(1);
+  });
+
+  it('subscribes to click and crosshair events when a tool is active', () => {
+    render(<CandlestickChart candles={candles} activeTool="line" />);
+    expect(mockSubscribeClick).toHaveBeenCalledTimes(1);
+    expect(mockSubscribeCrosshairMove).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not subscribe to chart events when no tool is active', () => {
+    render(<CandlestickChart candles={candles} />);
+    expect(mockSubscribeClick).not.toHaveBeenCalled();
+    expect(mockSubscribeCrosshairMove).not.toHaveBeenCalled();
+  });
+
+  it('creates a LinePrimitive and attaches it on second click when line tool is active', () => {
+    render(<CandlestickChart candles={candles} activeTool="line" />);
+
+    // Capture the click handler registered with the chart
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
+
+    const makeClickParam = (time: number) => ({
+      time,
+      point: { x: 100, y: 200 },
+    });
+
+    // First click — places p1
+    clickHandler(makeClickParam(1700000000));
+    expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
+    expect(LinePrimitive).toHaveBeenCalledTimes(1);
+
+    // Second click — finalizes at p2
+    clickHandler(makeClickParam(1700003600));
+    expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
+  });
+
+  it('creates a RectanglePrimitive when rectangle tool is active', () => {
+    render(<CandlestickChart candles={candles} activeTool="rectangle" />);
+
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
+    clickHandler({ time: 1700000000, point: { x: 100, y: 200 } });
+
+    expect(RectanglePrimitive).toHaveBeenCalledTimes(1);
+    expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
+  });
+
+  it('unsubscribes from events when tool is deactivated', () => {
+    const { rerender } = render(<CandlestickChart candles={candles} activeTool="line" />);
+    rerender(<CandlestickChart candles={candles} activeTool={null} />);
+    expect(mockUnsubscribeClick).toHaveBeenCalledTimes(1);
+    expect(mockUnsubscribeCrosshairMove).toHaveBeenCalledTimes(1);
   });
 });
