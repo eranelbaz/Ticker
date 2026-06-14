@@ -17,7 +17,7 @@ import { chartTheme } from '../config/chartTheme';
 
 type DrawingPrimitive = LinePrimitive | RectanglePrimitive;
 
-interface Props {
+type Props = {
   candles: Candle[];
   activeTool?: DrawingTool | null;
 }

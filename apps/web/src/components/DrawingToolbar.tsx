@@ -9,7 +9,7 @@ const TOOL_ICONS: Record<DrawingTool, React.ReactNode> = {
 };
 
 
-interface ToolButtonProps {
+type ToolButtonProps = {
   label: string;
   tool: DrawingTool;
   active: boolean;
@@ -38,7 +38,7 @@ function ToolButton({ label, tool, active, onToggle }: ToolButtonProps) {
 }
 
 
-interface Props {
+type Props = {
   activeTool: DrawingTool | null;
   onToolSelect: (tool: DrawingTool | null) => void;
 }

@@ -10,7 +10,7 @@ export type DrawingState =
   | { phase: 'idle'; finished: DrawingPrimitive[] }
   | { phase: 'placing-p2'; p1: DrawingPoint; preview: DrawingPrimitive };
 
-interface UseDrawingToolsProps {
+type UseDrawingToolsProps = {
   chart: IChartApi | null;
   series: ISeriesApi<'Candlestick'> | null;
   activeTool: DrawingTool | null;
