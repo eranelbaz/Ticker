@@ -6,9 +6,16 @@ import { RectanglePrimitive } from '../drawings/RectanglePrimitive';
 
 type DrawingPrimitive = LinePrimitive | RectanglePrimitive;
 
+export const DRAWING_PHASES = {
+  IDLE: 'idle',
+  PLACING_P2: 'placing-p2',
+} as const;
+
+type DrawingPhase = typeof DRAWING_PHASES[keyof typeof DRAWING_PHASES];
+
 export type DrawingState =
-  | { phase: 'idle'; finished: DrawingPrimitive[] }
-  | { phase: 'placing-p2'; p1: DrawingPoint; preview: DrawingPrimitive };
+  | { phase: typeof DRAWING_PHASES.IDLE; finished: DrawingPrimitive[] }
+  | { phase: typeof DRAWING_PHASES.PLACING_P2; p1: DrawingPoint; preview: DrawingPrimitive };
 
 type UseDrawingToolsProps = {
   chart: IChartApi | null;
@@ -51,17 +58,18 @@ export function useDrawingTools({
         price: price,
       };
 
-      if (drawingStateRef.current.phase === 'idle') {
-        drawingStateRef.current = {
-          phase: 'placing-p2',
-          p1: clickPoint,
-          preview: activeTool === 'line'
-            ? new LinePrimitive(seriesInstance, clickPoint, clickPoint)
-            : new RectanglePrimitive(seriesInstance, clickPoint, clickPoint),
-        };
-        chartInstance.panes()[0].attachPrimitive(drawingStateRef.current.preview);
-        drawingStateRef.current.preview.updateAllViews();
-      } else if (drawingStateRef.current.phase === 'placing-p2') {
+       if (drawingStateRef.current.phase === DRAWING_PHASES.IDLE) {
+         drawingStateRef.current = {
+           phase: DRAWING_PHASES.PLACING_P2,
+           p1: clickPoint,
+           preview: activeTool === 'line'
+             ? new LinePrimitive(seriesInstance, clickPoint, clickPoint)
+             : new RectanglePrimitive(seriesInstance, clickPoint, clickPoint),
+         };
+         chartInstance.panes()[0].attachPrimitive(drawingStateRef.current.preview);
+         drawingStateRef.current.preview.updateAllViews();
+       } else if (drawingStateRef.current.phase === DRAWING_PHASES.PLACING_P2) {
+
         const finishedDrawing = activeTool === 'line'
           ? new LinePrimitive(seriesInstance, drawingStateRef.current.p1, clickPoint)
           : new RectanglePrimitive(seriesInstance, drawingStateRef.current.p1, clickPoint);
@@ -70,15 +78,16 @@ export function useDrawingTools({
         chartInstance.panes()[0].attachPrimitive(finishedDrawing);
         finishedDrawing.updateAllViews();
 
-        const currentFinished = 
-          drawingStateRef.current.phase === 'idle' 
-            ? (drawingStateRef.current as any).finished 
-            : [];
+         const currentFinished = 
+           drawingStateRef.current.phase === DRAWING_PHASES.IDLE 
+             ? (drawingStateRef.current as any).finished 
+             : [];
+ 
+         drawingStateRef.current = {
+           phase: DRAWING_PHASES.IDLE,
+           finished: [...(Array.isArray(currentFinished) ? currentFinished : []), finishedDrawing],
+         };
 
-        drawingStateRef.current = {
-          phase: 'idle',
-          finished: [...(Array.isArray(currentFinished) ? currentFinished : []), finishedDrawing],
-        };
       }
     };
 
@@ -97,13 +106,14 @@ export function useDrawingTools({
       crosshairTimeRef.current = movePoint.time;
       crosshairPriceRef.current = movePoint.price;
 
-      if (drawingStateRef.current.phase === 'placing-p2') {
-        drawingStateRef.current.preview.setPoints(
-          drawingStateRef.current.p1,
-          movePoint,
-        );
-        drawingStateRef.current.preview.updateAllViews();
-      }
+       if (drawingStateRef.current.phase === DRAWING_PHASES.PLACING_P2) {
+         drawingStateRef.current.preview.setPoints(
+           drawingStateRef.current.p1,
+           movePoint,
+         );
+         drawingStateRef.current.preview.updateAllViews();
+       }
+
     };
 
     chartInstance.subscribeClick(onChartClick);

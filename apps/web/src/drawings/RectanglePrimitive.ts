@@ -7,7 +7,7 @@ import type {
   PaneAttachedParameter,
   Time,
 } from 'lightweight-charts';
-import type { DrawingPoint } from './types';
+import type { DrawingPoint, BitmapCoordinateSpaceScope } from './types';
 
 const RECT_STROKE = '#f59e0b';
 const RECT_FILL = 'rgba(245, 158, 11, 0.08)';
@@ -27,7 +27,7 @@ class RectanglePrimitiveRenderer implements IPrimitivePaneRenderer {
 
   draw(target: any): void {
     const self = this;
-    target.useBitmapCoordinateSpace(function({ context, horizontalPixelRatio, verticalPixelRatio }: any) {
+    target.useBitmapCoordinateSpace(function({ context, horizontalPixelRatio, verticalPixelRatio }: BitmapCoordinateSpaceScope) {
       const left = Math.round(Math.min(self._x1, self._x2) * horizontalPixelRatio);
       const top = Math.round(Math.min(self._y1, self._y2) * verticalPixelRatio);
       const width = Math.round(Math.abs(self._x2 - self._x1) * horizontalPixelRatio);
