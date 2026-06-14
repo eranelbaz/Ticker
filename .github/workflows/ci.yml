@@ -32,9 +32,9 @@ jobs:
     needs: detect-packages
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
-      fail-fast: false # Ensure all tests run even if one fails
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
