@@ -45,11 +45,12 @@ jobs:
           node-version: 22
           cache: 'pnpm'
 
-       - name: Install dependencies
-         run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-       - name: Run tests for ${{ matrix.package }}
-         run: pnpm --filter ${{ matrix.package }} test
+      - name: Run tests for ${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} test
+
 
 
 
