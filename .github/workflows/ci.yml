@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  detect-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.set-packages.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - id: set-packages
+        run: |
+          # Use pnpm recursive list to get project names and format as JSON array
+          # We filter for only the project names in a simple JSON array format
+          PACKAGES=$(pnpm ls -r --depth -1 --json | jq -c '[.[] | select(.name != "ticker") | .name]')
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+
+  test:
+    needs: detect-packages
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
+      fail-fast: false # Ensure all tests run even if one fails
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+       - name: Install dependencies
+         run: pnpm install --frozen-lockfile
+
+       - name: Run tests for ${{ matrix.package }}
+         run: pnpm --filter ${{ matrix.package }} test
+
+
+
+  verify:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All package tests passed successfully."
