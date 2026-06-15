@@ -27,29 +27,8 @@ jobs:
           PACKAGES=$(pnpm ls -r --depth -1 --json | jq -c '[.[] | select(.name != "ticker") | .name]')
           echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
 
-  install:
-    needs: detect-packages
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11.6.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Upload node_modules
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-modules
-          path: |
-            **/node_modules
-            pnpm-lock.yaml
-
   test:
-    needs: [detect-packages, install]
+    needs: detect-packages
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -63,18 +42,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'pnpm'
 
-      - name: Download dependencies
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace
+        run: pnpm recursive build
 
       - name: Run tests for ${{ matrix.package }}
         run: pnpm --filter ${{ matrix.package }} test
-
-
-
-
 
   verify:
     needs: test
