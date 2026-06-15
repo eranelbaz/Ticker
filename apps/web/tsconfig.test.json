@@ -7,7 +7,7 @@
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "verbatimModuleSyntax": false,
-    "allowImportingTsExtensions": false,
+    "allowImportingTsExtensions": true,
     "allowJs": true,
     "types": ["jest", "@testing-library/jest-dom", "node"]
   },
