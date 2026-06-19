@@ -4,8 +4,8 @@ import type {
   ISeriesApi,
   Time,
 } from 'lightweight-charts';
-import type { DrawingPoint } from './types';
-import { RectanglePrimitive } from './RectanglePrimitive';
+import type { DrawingPoint } from '../types';
+import { LinePrimitive } from './LinePrimitive';
 
 function makeMockSeries(
   priceToCoordinate: jest.Mock<Coordinate | null> = jest.fn(
@@ -34,20 +34,20 @@ const p2: DrawingPoint = {
   price: 60,
 };
 
-describe('RectanglePrimitive', () => {
+describe('LinePrimitive', () => {
   it('paneViews returns one view', () => {
-    const prim = new RectanglePrimitive(makeMockSeries(), p1, p2);
+    const prim = new LinePrimitive(makeMockSeries(), p1, p2);
     expect(prim.paneViews()).toHaveLength(1);
   });
 
   it('view renderer returns null before updateAllViews is called', () => {
-    const prim = new RectanglePrimitive(makeMockSeries(), p1, p2);
+    const prim = new LinePrimitive(makeMockSeries(), p1, p2);
     const [view] = prim.paneViews();
     expect(view.renderer()).toBeNull();
   });
 
   it('view renderer is non-null after attached + updateAllViews with valid coords', () => {
-    const prim = new RectanglePrimitive(makeMockSeries(), p1, p2);
+    const prim = new LinePrimitive(makeMockSeries(), p1, p2);
     const requestUpdate = jest.fn();
     prim.attached({ chart: makeMockChart(), requestUpdate });
     prim.updateAllViews();
@@ -56,7 +56,7 @@ describe('RectanglePrimitive', () => {
   });
 
   it('setPoints calls requestUpdate', () => {
-    const prim = new RectanglePrimitive(makeMockSeries(), p1, p2);
+    const prim = new LinePrimitive(makeMockSeries(), p1, p2);
     const requestUpdate = jest.fn();
     prim.attached({ chart: makeMockChart(), requestUpdate });
     prim.setPoints(p1, p2);
@@ -64,18 +64,14 @@ describe('RectanglePrimitive', () => {
   });
 
   it('setPoints does not throw before attached', () => {
-    const prim = new RectanglePrimitive(makeMockSeries(), p1, p2);
+    const prim = new LinePrimitive(makeMockSeries(), p1, p2);
     expect(() => prim.setPoints(p1, p2)).not.toThrow();
   });
 
   it('updateAllViews calls coordinate conversion on chart and series', () => {
     const timeToCoordinate = jest.fn(() => 150 as Coordinate);
     const priceToCoordinate = jest.fn(() => 200 as Coordinate);
-    const prim = new RectanglePrimitive(
-      makeMockSeries(priceToCoordinate),
-      p1,
-      p2,
-    );
+    const prim = new LinePrimitive(makeMockSeries(priceToCoordinate), p1, p2);
     prim.attached({
       chart: makeMockChart(timeToCoordinate),
       requestUpdate: jest.fn(),
@@ -88,11 +84,7 @@ describe('RectanglePrimitive', () => {
   });
 
   it('view renderer is null when a coordinate returns null (out of visible range)', () => {
-    const prim = new RectanglePrimitive(
-      makeMockSeries(jest.fn(() => null)),
-      p1,
-      p2,
-    );
+    const prim = new LinePrimitive(makeMockSeries(jest.fn(() => null)), p1, p2);
     prim.attached({ chart: makeMockChart(), requestUpdate: jest.fn() });
     prim.updateAllViews();
     const [view] = prim.paneViews();
