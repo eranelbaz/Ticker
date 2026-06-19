@@ -7,7 +7,11 @@ import type {
   PaneAttachedParameter,
   Time,
 } from 'lightweight-charts';
-import type { DrawingPoint, BitmapCoordinateSpaceScope } from './types';
+import type {
+  BitmapCoordinateSpaceScope,
+  BitmapRenderingTarget,
+  DrawingPoint,
+} from './types';
 
 const RECT_STROKE = '#f59e0b';
 const RECT_FILL = 'rgba(245, 158, 11, 0.08)';
@@ -25,21 +29,34 @@ class RectanglePrimitiveRenderer implements IPrimitivePaneRenderer {
     this._y2 = y2;
   }
 
-  draw(target: any): void {
-    const self = this;
-    target.useBitmapCoordinateSpace(function({ context, horizontalPixelRatio, verticalPixelRatio }: BitmapCoordinateSpaceScope) {
-      const left = Math.round(Math.min(self._x1, self._x2) * horizontalPixelRatio);
-      const top = Math.round(Math.min(self._y1, self._y2) * verticalPixelRatio);
-      const width = Math.round(Math.abs(self._x2 - self._x1) * horizontalPixelRatio);
-      const height = Math.round(Math.abs(self._y2 - self._y1) * verticalPixelRatio);
+  draw(target: BitmapRenderingTarget): void {
+    target.useBitmapCoordinateSpace(
+      ({
+        context,
+        horizontalPixelRatio,
+        verticalPixelRatio,
+      }: BitmapCoordinateSpaceScope) => {
+        const left = Math.round(
+          Math.min(this._x1, this._x2) * horizontalPixelRatio,
+        );
+        const top = Math.round(
+          Math.min(this._y1, this._y2) * verticalPixelRatio,
+        );
+        const width = Math.round(
+          Math.abs(this._x2 - this._x1) * horizontalPixelRatio,
+        );
+        const height = Math.round(
+          Math.abs(this._y2 - this._y1) * verticalPixelRatio,
+        );
 
-      context.fillStyle = RECT_FILL;
-      context.fillRect(left, top, width, height);
+        context.fillStyle = RECT_FILL;
+        context.fillRect(left, top, width, height);
 
-      context.strokeStyle = RECT_STROKE;
-      context.lineWidth = Math.round(1 * horizontalPixelRatio);
-      context.strokeRect(left, top, width, height);
-    });
+        context.strokeStyle = RECT_STROKE;
+        context.lineWidth = Math.round(1 * horizontalPixelRatio);
+        context.strokeRect(left, top, width, height);
+      },
+    );
   }
 }
 
@@ -67,7 +84,11 @@ export class RectanglePrimitive implements IPanePrimitive<Time> {
   private _p2: DrawingPoint;
   private readonly _view = new RectanglePrimitiveView();
 
-  constructor(series: ISeriesApi<'Candlestick'>, p1: DrawingPoint, p2: DrawingPoint) {
+  constructor(
+    series: ISeriesApi<'Candlestick'>,
+    p1: DrawingPoint,
+    p2: DrawingPoint,
+  ) {
     this._series = series;
     this._p1 = p1;
     this._p2 = p2;

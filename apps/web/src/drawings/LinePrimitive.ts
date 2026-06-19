@@ -7,7 +7,11 @@ import type {
   PaneAttachedParameter,
   Time,
 } from 'lightweight-charts';
-import type { DrawingPoint } from './types';
+import type {
+  BitmapCoordinateSpaceScope,
+  BitmapRenderingTarget,
+  DrawingPoint,
+} from './types';
 
 const LINE_COLOR = '#f59e0b';
 
@@ -24,30 +28,28 @@ class LinePrimitiveRenderer implements IPrimitivePaneRenderer {
     this.y2 = y2;
   }
 
-  draw(target: any): void {
-    target.useBitmapCoordinateSpace(({
-      context,
-      horizontalPixelRatio,
-      verticalPixelRatio
-    }: {
-      context?: any;
-      horizontalPixelRatio?: number;
-      verticalPixelRatio?: number;
-    }) => {
-      context.beginPath();
-      context.moveTo(
-        Math.round(this.x1 * (horizontalPixelRatio ?? 1)),
-        Math.round(this.y1 * (verticalPixelRatio ?? 1)),
-      );
-      context.lineTo(
-        Math.round(this.x2 * (horizontalPixelRatio ?? 1)),
-        Math.round(this.y2 * (verticalPixelRatio ?? 1)),
-      );
-      context.strokeStyle = LINE_COLOR;
-      const lineWidth = Math.round(1 * (horizontalPixelRatio ?? 1));
-      context.lineWidth = lineWidth;
-      context.stroke();
-    });
+  draw(target: BitmapRenderingTarget): void {
+    target.useBitmapCoordinateSpace(
+      ({
+        context,
+        horizontalPixelRatio,
+        verticalPixelRatio,
+      }: BitmapCoordinateSpaceScope) => {
+        context.beginPath();
+        context.moveTo(
+          Math.round(this.x1 * (horizontalPixelRatio ?? 1)),
+          Math.round(this.y1 * (verticalPixelRatio ?? 1)),
+        );
+        context.lineTo(
+          Math.round(this.x2 * (horizontalPixelRatio ?? 1)),
+          Math.round(this.y2 * (verticalPixelRatio ?? 1)),
+        );
+        context.strokeStyle = LINE_COLOR;
+        const lineWidth = Math.round(1 * (horizontalPixelRatio ?? 1));
+        context.lineWidth = lineWidth;
+        context.stroke();
+      },
+    );
   }
 }
 
@@ -76,7 +78,11 @@ export class LinePrimitive implements IPanePrimitive<Time> {
   private _p1: DrawingPoint;
   private _p2: DrawingPoint;
 
-  constructor(series: ISeriesApi<'Candlestick'>, p1: DrawingPoint, p2: DrawingPoint) {
+  constructor(
+    series: ISeriesApi<'Candlestick'>,
+    p1: DrawingPoint,
+    p2: DrawingPoint,
+  ) {
     this._series = series;
     this._p1 = p1;
     this._p2 = p2;

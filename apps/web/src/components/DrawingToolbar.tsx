@@ -8,13 +8,12 @@ const TOOL_ICONS: Record<DrawingTool, React.ReactNode> = {
   rectangle: <RectangleIcon />,
 };
 
-
 type ToolButtonProps = {
   label: string;
   tool: DrawingTool;
   active: boolean;
   onToggle: (tool: DrawingTool) => void;
-}
+};
 
 function ToolButton({ label, tool, active, onToggle }: ToolButtonProps) {
   return (
@@ -22,26 +21,21 @@ function ToolButton({ label, tool, active, onToggle }: ToolButtonProps) {
       aria-label={label}
       aria-pressed={active}
       onClick={() => onToggle(tool)}
-        className={classNameMerge(
-         'flex h-9 w-9 items-center justify-center rounded',
-         'text-chart-text transition-colors',
-         active
-           ? 'bg-blue-600'
-           : 'hover:bg-chart-grid',
-       )}
-
-     >
-       {TOOL_ICONS[tool]}
-     </button>
-
+      className={classNameMerge(
+        'flex h-9 w-9 items-center justify-center rounded',
+        'text-chart-text transition-colors',
+        active ? 'bg-blue-600' : 'hover:bg-chart-grid',
+      )}
+    >
+      {TOOL_ICONS[tool]}
+    </button>
   );
 }
-
 
 type Props = {
   activeTool: DrawingTool | null;
   onToolSelect: (tool: DrawingTool | null) => void;
-}
+};
 
 export function DrawingToolbar({ activeTool, onToolSelect }: Props) {
   const toggle = (tool: DrawingTool) =>
@@ -52,8 +46,18 @@ export function DrawingToolbar({ activeTool, onToolSelect }: Props) {
       className="flex flex-col gap-1 p-2 bg-chart-toolbar border-r border-chart-grid"
       aria-label="Drawing tools"
     >
-      <ToolButton label="Line" tool="line" active={activeTool === 'line'} onToggle={toggle} />
-      <ToolButton label="Rectangle" tool="rectangle" active={activeTool === 'rectangle'} onToggle={toggle} />
+      <ToolButton
+        label="Line"
+        tool="line"
+        active={activeTool === 'line'}
+        onToggle={toggle}
+      />
+      <ToolButton
+        label="Rectangle"
+        tool="rectangle"
+        active={activeTool === 'rectangle'}
+        onToggle={toggle}
+      />
     </aside>
   );
 }

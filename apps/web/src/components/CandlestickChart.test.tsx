@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { render, fireEvent } from '@testing-library/react';
 
 const mockSetData = jest.fn();
@@ -88,7 +87,9 @@ describe('CandlestickChart', () => {
   });
 
   it('removes the chart on unmount', () => {
-    const { unmount } = render(<CandlestickChart candles={candles} activeTool={null} />);
+    const { unmount } = render(
+      <CandlestickChart candles={candles} activeTool={null} />,
+    );
     unmount();
     expect(mockRemove).toHaveBeenCalledTimes(1);
   });
@@ -109,7 +110,9 @@ describe('CandlestickChart', () => {
     render(<CandlestickChart candles={candles} activeTool="line" />);
 
     // Capture the click handler registered with the chart
-    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (
+      param: unknown,
+    ) => void;
 
     const makeClickParam = (time: number) => ({
       time,
@@ -130,7 +133,9 @@ describe('CandlestickChart', () => {
   it('creates a RectanglePrimitive when rectangle tool is active', () => {
     render(<CandlestickChart candles={candles} activeTool="rectangle" />);
 
-    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (
+      param: unknown,
+    ) => void;
     clickHandler({ time: 1700000000, point: { x: 100, y: 200 } });
 
     expect(RectanglePrimitive).toHaveBeenCalledTimes(1);
@@ -138,7 +143,9 @@ describe('CandlestickChart', () => {
   });
 
   it('unsubscribes from events when tool is deactivated', () => {
-    const { rerender } = render(<CandlestickChart candles={candles} activeTool="line" />);
+    const { rerender } = render(
+      <CandlestickChart candles={candles} activeTool="line" />,
+    );
     rerender(<CandlestickChart candles={candles} activeTool={null} />);
     expect(mockUnsubscribeClick).toHaveBeenCalledTimes(1);
     expect(mockUnsubscribeCrosshairMove).toHaveBeenCalledTimes(1);
@@ -146,10 +153,21 @@ describe('CandlestickChart', () => {
 
   it('calls onToolDeselect after the second click completes a drawing', () => {
     const onToolDeselect = jest.fn();
-    render(<CandlestickChart candles={candles} activeTool="line" onToolDeselect={onToolDeselect} />);
+    render(
+      <CandlestickChart
+        candles={candles}
+        activeTool="line"
+        onToolDeselect={onToolDeselect}
+      />,
+    );
 
-    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
-    const makeClickParam = (time: number) => ({ time, point: { x: 100, y: 200 } });
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (
+      param: unknown,
+    ) => void;
+    const makeClickParam = (time: number) => ({
+      time,
+      point: { x: 100, y: 200 },
+    });
 
     clickHandler(makeClickParam(1700000000));
     expect(onToolDeselect).not.toHaveBeenCalled();
@@ -160,7 +178,13 @@ describe('CandlestickChart', () => {
 
   it('calls onToolDeselect when Escape is pressed with no drawing in progress', () => {
     const onToolDeselect = jest.fn();
-    render(<CandlestickChart candles={candles} activeTool="line" onToolDeselect={onToolDeselect} />);
+    render(
+      <CandlestickChart
+        candles={candles}
+        activeTool="line"
+        onToolDeselect={onToolDeselect}
+      />,
+    );
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onToolDeselect).toHaveBeenCalledTimes(1);
@@ -168,9 +192,17 @@ describe('CandlestickChart', () => {
 
   it('cancels mid-drawing and calls onToolDeselect when Escape is pressed during placement', () => {
     const onToolDeselect = jest.fn();
-    render(<CandlestickChart candles={candles} activeTool="line" onToolDeselect={onToolDeselect} />);
+    render(
+      <CandlestickChart
+        candles={candles}
+        activeTool="line"
+        onToolDeselect={onToolDeselect}
+      />,
+    );
 
-    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (
+      param: unknown,
+    ) => void;
     clickHandler({ time: 1700000000, point: { x: 100, y: 200 } });
     expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
 

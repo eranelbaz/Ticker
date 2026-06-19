@@ -5,9 +5,13 @@ import { server } from './test/server';
 type DrawingTool = 'line' | 'rectangle';
 
 jest.mock('./components/CandlestickChart', () => ({
-  CandlestickChart: ({ activeTool }: { candles: unknown[]; activeTool?: DrawingTool | null; onToolDeselect?: () => void }) => (
-    <div>drawing tool is {activeTool === null ? 'null' : activeTool}</div>
-  ),
+  CandlestickChart: ({
+    activeTool,
+  }: {
+    candles: unknown[];
+    activeTool?: DrawingTool | null;
+    onToolDeselect?: () => void;
+  }) => <div>drawing tool is {activeTool === null ? 'null' : activeTool}</div>,
 }));
 
 jest.mock('./components/DrawingToolbar', () => ({
@@ -18,8 +22,15 @@ jest.mock('./components/DrawingToolbar', () => ({
     onToolSelect: (tool: DrawingTool | null) => void;
   }) => (
     <div>
-      <button data-testid="line-btn" onClick={() => onToolSelect('line')}>Line</button>{' '}
-      <button data-testid="rectangle-btn" onClick={() => onToolSelect('rectangle')}>Rectangle</button>
+      <button data-testid="line-btn" onClick={() => onToolSelect('line')}>
+        Line
+      </button>{' '}
+      <button
+        data-testid="rectangle-btn"
+        onClick={() => onToolSelect('rectangle')}
+      >
+        Rectangle
+      </button>
     </div>
   ),
 }));

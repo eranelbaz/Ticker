@@ -15,9 +15,13 @@ type Props = {
   candles: Candle[];
   activeTool?: DrawingTool | null;
   onToolDeselect?: () => void;
-}
+};
 
-export function CandlestickChart({ candles, activeTool = null, onToolDeselect }: Props) {
+export function CandlestickChart({
+  candles,
+  activeTool = null,
+  onToolDeselect,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [chart, setChart] = useState<IChartApi | null>(null);
   const [series, setSeries] = useState<ISeriesApi<'Candlestick'> | null>(null);

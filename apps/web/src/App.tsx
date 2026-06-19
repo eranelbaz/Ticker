@@ -34,9 +34,9 @@ export default function App() {
     };
   }, []);
 
-const onToolSelect = (tool: DrawingTool | null) => {
-  setActiveTool(tool);
-};
+  const onToolSelect = (tool: DrawingTool | null) => {
+    setActiveTool(tool);
+  };
 
   if (isLoading) return <div className="fixed inset-0 bg-chart-bg" />;
 
@@ -49,9 +49,13 @@ const onToolSelect = (tool: DrawingTool | null) => {
   }
 
   return (
-      <div className="fixed inset-0 flex bg-chart-bg text-chart-text">
-        <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
-        <CandlestickChart candles={candles} activeTool={activeTool} onToolDeselect={() => setActiveTool(null)} />
-      </div>
+    <div className="fixed inset-0 flex bg-chart-bg text-chart-text">
+      <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
+      <CandlestickChart
+        candles={candles}
+        activeTool={activeTool}
+        onToolDeselect={() => setActiveTool(null)}
+      />
+    </div>
   );
 }

@@ -6,7 +6,9 @@ describe('DrawingToolbar', () => {
   it('renders a Line button and a Rectangle button', () => {
     render(<DrawingToolbar activeTool={null} onToolSelect={jest.fn()} />);
     expect(screen.getByRole('button', { name: 'Line' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Rectangle' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Rectangle' }),
+    ).toBeInTheDocument();
   });
 
   it('calls onToolSelect with the tool when a button is clicked', async () => {
@@ -25,7 +27,13 @@ describe('DrawingToolbar', () => {
 
   it('marks the active tool button with aria-pressed', () => {
     render(<DrawingToolbar activeTool="rectangle" onToolSelect={jest.fn()} />);
-    expect(screen.getByRole('button', { name: 'Rectangle' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Rectangle' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Line' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 });
