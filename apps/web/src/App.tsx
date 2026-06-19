@@ -51,7 +51,7 @@ const onToolSelect = (tool: DrawingTool | null) => {
   return (
       <div className="fixed inset-0 flex bg-chart-bg text-chart-text">
         <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
-        <CandlestickChart candles={candles} activeTool={activeTool} />
+        <CandlestickChart candles={candles} activeTool={activeTool} onToolDeselect={() => setActiveTool(null)} />
       </div>
   );
 }

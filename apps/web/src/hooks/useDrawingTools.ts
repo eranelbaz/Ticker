@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { IChartApi, ISeriesApi, MouseEventParams, Time } from 'lightweight-charts';
+import type { IChartApi, ISeriesApi, MouseEventParams, UTCTimestamp } from 'lightweight-charts';
 import type { DrawingTool, DrawingPoint } from '../drawings/types';
 import { LinePrimitive } from '../drawings/LinePrimitive';
 import { RectanglePrimitive } from '../drawings/RectanglePrimitive';
@@ -11,8 +11,6 @@ export const DRAWING_PHASES = {
   PLACING_P2: 'placing-p2',
 } as const;
 
-type DrawingPhase = typeof DRAWING_PHASES[keyof typeof DRAWING_PHASES];
-
 export type DrawingState =
   | { phase: typeof DRAWING_PHASES.IDLE; finished: DrawingPrimitive[] }
   | { phase: typeof DRAWING_PHASES.PLACING_P2; p1: DrawingPoint; preview: DrawingPrimitive };
@@ -22,8 +20,9 @@ type UseDrawingToolsProps = {
   series: ISeriesApi<'Candlestick'> | null;
   activeTool: DrawingTool | null;
   drawingStateRef: React.MutableRefObject<DrawingState>;
-  crosshairTimeRef: React.MutableRefObject<Time | null>;
+  crosshairTimeRef: React.MutableRefObject<UTCTimestamp | null>;
   crosshairPriceRef: React.MutableRefObject<number | null>;
+  onToolDeselect?: () => void;
 }
 
 export function useDrawingTools({
@@ -33,11 +32,12 @@ export function useDrawingTools({
   drawingStateRef,
   crosshairTimeRef,
   crosshairPriceRef,
+  onToolDeselect,
 }: UseDrawingToolsProps) {
   useEffect(() => {
     const chartInstance = chart;
     const seriesInstance = series;
-    if (!chartInstance || !seriesInstance) return;
+    if (!chartInstance || !seriesInstance || !activeTool) return;
 
     const onChartClick = (param: MouseEventParams) => {
       if (!activeTool || param.point === undefined) {
@@ -54,7 +54,7 @@ export function useDrawingTools({
       }
 
       const clickPoint: DrawingPoint = {
-        time: param.time as Time,
+        time: param.time as UTCTimestamp,
         price: price,
       };
 
@@ -78,17 +78,22 @@ export function useDrawingTools({
         chartInstance.panes()[0].attachPrimitive(finishedDrawing);
         finishedDrawing.updateAllViews();
 
-         const currentFinished = 
-           drawingStateRef.current.phase === DRAWING_PHASES.IDLE 
-             ? (drawingStateRef.current as any).finished 
-             : [];
- 
          drawingStateRef.current = {
            phase: DRAWING_PHASES.IDLE,
-           finished: [...(Array.isArray(currentFinished) ? currentFinished : []), finishedDrawing],
+           finished: [finishedDrawing],
          };
 
+        onToolDeselect?.();
       }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || !activeTool) return;
+      if (drawingStateRef.current.phase === DRAWING_PHASES.PLACING_P2) {
+        chartInstance.panes()[0].detachPrimitive(drawingStateRef.current.preview);
+        drawingStateRef.current = { phase: DRAWING_PHASES.IDLE, finished: [] };
+      }
+      onToolDeselect?.();
     };
 
     const onCrosshairMove = (param: MouseEventParams) => {
@@ -99,7 +104,7 @@ export function useDrawingTools({
       if (price === null) return;
 
       const movePoint: DrawingPoint = {
-        time: param.time as Time,
+        time: param.time as UTCTimestamp,
         price: price,
       };
 
@@ -118,10 +123,12 @@ export function useDrawingTools({
 
     chartInstance.subscribeClick(onChartClick);
     chartInstance.subscribeCrosshairMove(onCrosshairMove);
+    window.addEventListener('keydown', onKeyDown);
 
     return () => {
       chartInstance.unsubscribeClick(onChartClick);
       chartInstance.unsubscribeCrosshairMove(onCrosshairMove);
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [chart, series, activeTool]);
 }

@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 
 const mockSetData = jest.fn();
 const mockFitContent = jest.fn();
@@ -38,15 +38,17 @@ jest.mock('lightweight-charts', () => ({
   CandlestickSeries: Symbol('CandlestickSeries'),
 }));
 
-// Primitives: stub setPoints to avoid real coordinate logic in these tests
+// Primitives: stub setPoints/updateAllViews to avoid real coordinate logic in these tests
 jest.mock('../drawings/LinePrimitive', () => ({
-  LinePrimitive: jest.fn().mockImplementation(() => ({ 
-    setPoints: jest.fn()
+  LinePrimitive: jest.fn().mockImplementation(() => ({
+    setPoints: jest.fn(),
+    updateAllViews: jest.fn(),
   })),
 }));
 jest.mock('../drawings/RectanglePrimitive', () => ({
-  RectanglePrimitive: jest.fn().mockImplementation(() => ({ 
-    setPoints: jest.fn()
+  RectanglePrimitive: jest.fn().mockImplementation(() => ({
+    setPoints: jest.fn(),
+    updateAllViews: jest.fn(),
   })),
 }));
 
@@ -119,9 +121,10 @@ describe('CandlestickChart', () => {
     expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
     expect(LinePrimitive).toHaveBeenCalledTimes(1);
 
-    // Second click — finalizes at p2
+    // Second click — finalizes at p2 (preview attach + final attach = 2 total)
     clickHandler(makeClickParam(1700003600));
-    expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
+    expect(paneMock.detachPrimitive).toHaveBeenCalledTimes(1);
+    expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(2);
   });
 
   it('creates a RectanglePrimitive when rectangle tool is active', () => {
@@ -139,5 +142,40 @@ describe('CandlestickChart', () => {
     rerender(<CandlestickChart candles={candles} activeTool={null} />);
     expect(mockUnsubscribeClick).toHaveBeenCalledTimes(1);
     expect(mockUnsubscribeCrosshairMove).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onToolDeselect after the second click completes a drawing', () => {
+    const onToolDeselect = jest.fn();
+    render(<CandlestickChart candles={candles} activeTool="line" onToolDeselect={onToolDeselect} />);
+
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
+    const makeClickParam = (time: number) => ({ time, point: { x: 100, y: 200 } });
+
+    clickHandler(makeClickParam(1700000000));
+    expect(onToolDeselect).not.toHaveBeenCalled();
+
+    clickHandler(makeClickParam(1700003600));
+    expect(onToolDeselect).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onToolDeselect when Escape is pressed with no drawing in progress', () => {
+    const onToolDeselect = jest.fn();
+    render(<CandlestickChart candles={candles} activeTool="line" onToolDeselect={onToolDeselect} />);
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onToolDeselect).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels mid-drawing and calls onToolDeselect when Escape is pressed during placement', () => {
+    const onToolDeselect = jest.fn();
+    render(<CandlestickChart candles={candles} activeTool="line" onToolDeselect={onToolDeselect} />);
+
+    const clickHandler = mockSubscribeClick.mock.calls[0][0] as (param: any) => void;
+    clickHandler({ time: 1700000000, point: { x: 100, y: 200 } });
+    expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(paneMock.detachPrimitive).toHaveBeenCalledTimes(1);
+    expect(onToolDeselect).toHaveBeenCalledTimes(1);
   });
 });

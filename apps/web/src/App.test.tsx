@@ -5,22 +5,22 @@ import { server } from './test/server';
 type DrawingTool = 'line' | 'rectangle';
 
 jest.mock('./components/CandlestickChart', () => ({
-  CandlestickChart: ({ activeTool }: { candles: unknown[]; activeTool?: DrawingTool | null }) => (
-    <div>drawing tool is {activeTool === null ? 'null' : activeTool} /div>
+  CandlestickChart: ({ activeTool }: { candles: unknown[]; activeTool?: DrawingTool | null; onToolDeselect?: () => void }) => (
+    <div>drawing tool is {activeTool === null ? 'null' : activeTool}</div>
   ),
 }));
 
 jest.mock('./components/DrawingToolbar', () => ({
-  DrawingToolbar: ({ 
+  DrawingToolbar: ({
     onToolSelect,
-  }: { 
+  }: {
     activeTool: DrawingTool | null;
-    onToolSelect: (tool: DrawingTool | null) => void;  
+    onToolSelect: (tool: DrawingTool | null) => void;
   }) => (
     <div>
-      <button data-testid="line-btn" onClick={() => onToolSelect('line')} /button> Line</button>{' '}
-      <button data-testid="rectangle-btn" onClick={() => onToolSelect('rectangle')} /button> Rectangle</button>
-    /div>
+      <button data-testid="line-btn" onClick={() => onToolSelect('line')}>Line</button>{' '}
+      <button data-testid="rectangle-btn" onClick={() => onToolSelect('rectangle')}>Rectangle</button>
+    </div>
   ),
 }));
 
