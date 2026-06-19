@@ -54,7 +54,29 @@ jobs:
         run: pnpm --filter ${{ matrix.package }} test
 
   verify:
-    needs: test
+    needs: [detect-packages, test]
     runs-on: ubuntu-latest
+    if: always()
     steps:
-      - run: echo "All package tests passed successfully."
+      - name: Check all tests passed
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+          PACKAGES: ${{ needs.detect-packages.outputs.packages }}
+        run: |
+          echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| ------- | ------ |" >> $GITHUB_STEP_SUMMARY
+          for pkg in $(echo "$PACKAGES" | jq -r '.[]'); do
+            if [ "$TEST_RESULT" = "success" ]; then
+              echo "| \`$pkg\` | ✅ passed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| \`$pkg\` | ❌ failed |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$TEST_RESULT" != "success" ]; then
+            echo "**Result: tests failed — merge blocked**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "**Result: all tests passed**" >> $GITHUB_STEP_SUMMARY
