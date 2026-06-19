@@ -5,8 +5,13 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    host: true,
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:3000',
+
+        changeOrigin: true,
+      },
     },
   },
 });

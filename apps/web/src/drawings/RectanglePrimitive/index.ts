@@ -1,0 +1,1 @@
+export { RectanglePrimitive } from './RectanglePrimitive';

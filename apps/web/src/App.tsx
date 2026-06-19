@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { fetchCandles } from './api/candles';
 import { CandlestickChart } from './components/CandlestickChart';
 import type { Candle } from '@ticker/server';
+import type { DrawingTool } from './drawings/types';
+import { DrawingToolbar } from './components/DrawingToolbar';
 
 const DEFAULT_SYMBOL = 'BTCUSD';
 const DEFAULT_COUNT = 300;
@@ -10,6 +12,7 @@ export default function App() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTool, setActiveTool] = useState<DrawingTool | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +34,10 @@ export default function App() {
     };
   }, []);
 
+  const onToolSelect = (tool: DrawingTool | null) => {
+    setActiveTool(tool);
+  };
+
   if (isLoading) return <div className="fixed inset-0 bg-chart-bg" />;
 
   if (error) {
@@ -42,8 +49,13 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 bg-chart-bg text-chart-text">
-      <CandlestickChart candles={candles} />
+    <div className="fixed inset-0 flex bg-chart-bg text-chart-text">
+      <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
+      <CandlestickChart
+        candles={candles}
+        activeTool={activeTool}
+        onToolDeselect={() => setActiveTool(null)}
+      />
     </div>
   );
 }
