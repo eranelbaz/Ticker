@@ -106,7 +106,6 @@ export class LinePrimitive implements IPanePrimitive<Time> {
 
   updateAllViews(): void {
     if (!this._chart) {
-      console.log('[DEBUG][LinePrimitive] updateAllViews failed: no chart');
       return;
     }
 

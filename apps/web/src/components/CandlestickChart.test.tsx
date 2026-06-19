@@ -37,7 +37,6 @@ jest.mock('lightweight-charts', () => ({
   CandlestickSeries: Symbol('CandlestickSeries'),
 }));
 
-// Primitives: stub setPoints/updateAllViews to avoid real coordinate logic in these tests
 jest.mock('../drawings/LinePrimitive', () => ({
   LinePrimitive: jest.fn().mockImplementation(() => ({
     setPoints: jest.fn(),
@@ -109,7 +108,6 @@ describe('CandlestickChart', () => {
   it('creates a LinePrimitive and attaches it on second click when line tool is active', () => {
     render(<CandlestickChart candles={candles} activeTool="line" />);
 
-    // Capture the click handler registered with the chart
     const clickHandler = mockSubscribeClick.mock.calls[0][0] as (
       param: unknown,
     ) => void;
@@ -119,12 +117,10 @@ describe('CandlestickChart', () => {
       point: { x: 100, y: 200 },
     });
 
-    // First click — places p1
     clickHandler(makeClickParam(1700000000));
     expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(1);
     expect(LinePrimitive).toHaveBeenCalledTimes(1);
 
-    // Second click — finalizes at p2 (preview attach + final attach = 2 total)
     clickHandler(makeClickParam(1700003600));
     expect(paneMock.detachPrimitive).toHaveBeenCalledTimes(1);
     expect(paneMock.attachPrimitive).toHaveBeenCalledTimes(2);
