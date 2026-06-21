@@ -47,6 +47,7 @@ export function useDrawingTools({
     const chartInstance = chart;
     const seriesInstance = series;
     if (!chartInstance || !seriesInstance || !activeTool) return;
+    if (activeTool !== 'line' && activeTool !== 'rectangle') return;
 
     const onChartClick = (param: MouseEventParams) => {
       if (!activeTool || param.point === undefined) {
