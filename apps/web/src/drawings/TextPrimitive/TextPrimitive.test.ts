@@ -101,4 +101,26 @@ describe('TextPrimitive', () => {
     prim.updateAllViews();
     expect(prim.containsPoint(1000, 1000)).toBe(false);
   });
+
+  it('setVisible(false) hides the view renderer', () => {
+    const prim = new TextPrimitive(makeMockSeries(), anchor, 'hello');
+    prim.attached({ chart: makeMockChart(), requestUpdate: jest.fn() });
+    prim.updateAllViews();
+    expect(prim.paneViews()[0].renderer()).not.toBeNull();
+    prim.setVisible(false);
+    prim.updateAllViews();
+    expect(prim.paneViews()[0].renderer()).toBeNull();
+  });
+
+  it('setVisible(true) restores the view renderer', () => {
+    const prim = new TextPrimitive(makeMockSeries(), anchor, 'hello');
+    prim.attached({ chart: makeMockChart(), requestUpdate: jest.fn() });
+    prim.updateAllViews();
+    prim.setVisible(false);
+    prim.updateAllViews();
+    expect(prim.paneViews()[0].renderer()).toBeNull();
+    prim.setVisible(true);
+    prim.updateAllViews();
+    expect(prim.paneViews()[0].renderer()).not.toBeNull();
+  });
 });

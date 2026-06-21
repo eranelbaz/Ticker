@@ -69,6 +69,7 @@ export function useTextTool({
       primitive.updateAllViews();
       textPrimitivesRef.current.push(primitive);
 
+      primitive.setVisible(false);
       setEditor({
         primitive,
         x: param.point.x,
@@ -91,6 +92,7 @@ export function useTextTool({
       const py = seriesInstance.priceToCoordinate(anchor.price);
       if (px === null || py === null) return;
 
+      hit.setVisible(false);
       setEditor({
         primitive: hit,
         x: px,
@@ -124,6 +126,8 @@ export function useTextTool({
       if (!prev) return null;
       if (prev.value.trim() === '') {
         removePrimitive(prev.primitive);
+      } else {
+        prev.primitive.setVisible(true);
       }
       return null;
     });
@@ -136,6 +140,7 @@ export function useTextTool({
         removePrimitive(prev.primitive);
       } else {
         prev.primitive.setText(prev.original);
+        prev.primitive.setVisible(true);
         prev.primitive.updateAllViews();
       }
       return null;

@@ -25,6 +25,7 @@ export class TextPrimitive implements IPanePrimitive<Time> {
   private _text: string;
   private _x: number | null = null;
   private _y: number | null = null;
+  private _visible: boolean = true;
 
   constructor(
     series: ISeriesApi<'Candlestick'>,
@@ -55,6 +56,11 @@ export class TextPrimitive implements IPanePrimitive<Time> {
     return this._text;
   }
 
+  setVisible(visible: boolean): void {
+    this._visible = visible;
+    this._requestUpdate?.();
+  }
+
   getAnchor(): DrawingPoint {
     return this._anchor;
   }
@@ -81,7 +87,11 @@ export class TextPrimitive implements IPanePrimitive<Time> {
 
     this._x = x;
     this._y = y;
-    this._view.update(x, y, this._text);
+    if (this._visible) {
+      this._view.update(x, y, this._text);
+    } else {
+      this._view.invalidate();
+    }
   }
 
   paneViews(): IPanePrimitivePaneView[] {
