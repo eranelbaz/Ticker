@@ -5,6 +5,8 @@ const mockFitContent = jest.fn();
 const mockRemove = jest.fn();
 const mockSubscribeClick = jest.fn();
 const mockUnsubscribeClick = jest.fn();
+const mockSubscribeDblClick = jest.fn();
+const mockUnsubscribeDblClick = jest.fn();
 const mockSubscribeCrosshairMove = jest.fn();
 const mockUnsubscribeCrosshairMove = jest.fn();
 const mockCoordinateToPrice = jest.fn(() => 50);
@@ -25,6 +27,8 @@ const mockChart = {
   remove: mockRemove,
   subscribeClick: mockSubscribeClick,
   unsubscribeClick: mockUnsubscribeClick,
+  subscribeDblClick: mockSubscribeDblClick,
+  unsubscribeDblClick: mockUnsubscribeDblClick,
   subscribeCrosshairMove: mockSubscribeCrosshairMove,
   unsubscribeCrosshairMove: mockUnsubscribeCrosshairMove,
   panes: () => [paneMock],
@@ -47,6 +51,18 @@ jest.mock('../drawings/RectanglePrimitive', () => ({
   RectanglePrimitive: jest.fn().mockImplementation(() => ({
     setPoints: jest.fn(),
     updateAllViews: jest.fn(),
+  })),
+}));
+jest.mock('../drawings/TextPrimitive', () => ({
+  TextPrimitive: jest.fn().mockImplementation(() => ({
+    setText: jest.fn(),
+    getText: jest.fn(() => ''),
+    getAnchor: jest.fn(() => ({ time: 1700000000, price: 50 })),
+    containsPoint: jest.fn(() => false),
+    updateAllViews: jest.fn(),
+    attached: jest.fn(),
+    detached: jest.fn(),
+    paneViews: jest.fn(() => []),
   })),
 }));
 
@@ -95,13 +111,15 @@ describe('CandlestickChart', () => {
 
   it('subscribes to click and crosshair events when a tool is active', () => {
     render(<CandlestickChart candles={candles} activeTool="line" />);
-    expect(mockSubscribeClick).toHaveBeenCalledTimes(1);
+    // useDrawingTools + useTextTool each subscribe once
+    expect(mockSubscribeClick).toHaveBeenCalledTimes(2);
     expect(mockSubscribeCrosshairMove).toHaveBeenCalledTimes(1);
   });
 
   it('does not subscribe to chart events when no tool is active', () => {
     render(<CandlestickChart candles={candles} />);
-    expect(mockSubscribeClick).not.toHaveBeenCalled();
+    // useTextTool subscribes regardless of activeTool, useDrawingTools guards
+    expect(mockSubscribeClick).toHaveBeenCalledTimes(1);
     expect(mockSubscribeCrosshairMove).not.toHaveBeenCalled();
   });
 
@@ -143,7 +161,8 @@ describe('CandlestickChart', () => {
       <CandlestickChart candles={candles} activeTool="line" />,
     );
     rerender(<CandlestickChart candles={candles} activeTool={null} />);
-    expect(mockUnsubscribeClick).toHaveBeenCalledTimes(1);
+    // useDrawingTools unsubscribes; useTextTool also unsubscribes + resubscribes
+    expect(mockUnsubscribeClick).toHaveBeenCalledTimes(2);
     expect(mockUnsubscribeCrosshairMove).toHaveBeenCalledTimes(1);
   });
 
