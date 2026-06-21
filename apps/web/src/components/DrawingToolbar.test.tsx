@@ -11,6 +11,15 @@ describe('DrawingToolbar', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders a Text button that selects the text tool', async () => {
+    const onToolSelect = jest.fn();
+    render(<DrawingToolbar activeTool={null} onToolSelect={onToolSelect} />);
+    const button = screen.getByRole('button', { name: 'Text' });
+    expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    expect(onToolSelect).toHaveBeenCalledWith('text');
+  });
+
   it('calls onToolSelect with the tool when a button is clicked', async () => {
     const onToolSelect = jest.fn();
     render(<DrawingToolbar activeTool={null} onToolSelect={onToolSelect} />);
