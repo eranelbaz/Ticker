@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { Candle } from './candle.interface';
-import { AlpacaBarsResponse, buildBarsUrl, mapBar } from './alpaca';
+import { AlpacaBarsResponse, buildBarsUrl, mapBar } from '../data-providers/alpaca';
 
 @Injectable()
 export class CandlesService {
