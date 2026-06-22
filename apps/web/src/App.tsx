@@ -5,7 +5,7 @@ import type { Candle } from '@ticker/server';
 import type { DrawingTool } from './drawings/types';
 import { DrawingToolbar } from './components/DrawingToolbar';
 
-const DEFAULT_SYMBOL = 'BTCUSD';
+const DEFAULT_SYMBOL = 'SPY';
 const DEFAULT_COUNT = 300;
 
 export default function App() {
