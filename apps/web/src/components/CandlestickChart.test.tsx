@@ -111,14 +111,12 @@ describe('CandlestickChart', () => {
 
   it('subscribes to click and crosshair events when a tool is active', () => {
     render(<CandlestickChart candles={candles} activeTool="line" />);
-    // useDrawingTools + useTextTool each subscribe once
     expect(mockSubscribeClick).toHaveBeenCalledTimes(2);
     expect(mockSubscribeCrosshairMove).toHaveBeenCalledTimes(1);
   });
 
   it('does not subscribe to chart events when no tool is active', () => {
     render(<CandlestickChart candles={candles} />);
-    // useTextTool subscribes regardless of activeTool, useDrawingTools guards
     expect(mockSubscribeClick).toHaveBeenCalledTimes(1);
     expect(mockSubscribeCrosshairMove).not.toHaveBeenCalled();
   });
@@ -161,7 +159,6 @@ describe('CandlestickChart', () => {
       <CandlestickChart candles={candles} activeTool="line" />,
     );
     rerender(<CandlestickChart candles={candles} activeTool={null} />);
-    // useDrawingTools unsubscribes; useTextTool also unsubscribes + resubscribes
     expect(mockUnsubscribeClick).toHaveBeenCalledTimes(2);
     expect(mockUnsubscribeCrosshairMove).toHaveBeenCalledTimes(1);
   });
