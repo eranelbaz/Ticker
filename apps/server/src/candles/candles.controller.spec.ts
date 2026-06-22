@@ -1,6 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
 import { CandlesController } from './candles.controller';
-import { CandlesService } from './candles.service';
 
 describe('CandlesController', () => {
   let controller: CandlesController;
@@ -8,7 +7,7 @@ describe('CandlesController', () => {
 
   beforeEach(() => {
     service = { getCandles: jest.fn() };
-    controller = new CandlesController(service as unknown as CandlesService);
+    controller = new CandlesController(service);
   });
 
   it('delegates to the service and returns its candles', async () => {

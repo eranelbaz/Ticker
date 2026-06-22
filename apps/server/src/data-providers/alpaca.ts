@@ -1,4 +1,4 @@
-import { Candle } from './candle.interface';
+import { Candle } from '../candles/candle.interface';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
