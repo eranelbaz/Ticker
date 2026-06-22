@@ -26,9 +26,6 @@ export function buildBarsUrl(
   count: number,
   now: Date = new Date(),
 ): string {
-  // sort=desc + limit=count returns the most recent `count` daily bars.
-  // start just needs to reach back far enough to contain that many trading
-  // days; count*2 calendar days comfortably covers weekends and holidays.
   const start = new Date(now.getTime() - (count * 2 + 5) * DAY_MS);
   const params = new URLSearchParams({
     timeframe: '1Day',

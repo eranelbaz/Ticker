@@ -1,39 +1,36 @@
 import { HttpException } from '@nestjs/common';
-import axios, { AxiosError } from 'axios';
 import { CandlesService } from './candles.service';
+import * as fetchersModule from '../data-providers/fetchers';
 
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+jest.mock('../data-providers/fetchers', () => ({
+  __esModule: true,
+  fetchers: { alpaca: jest.fn() },
+}));
 
 const ORIGINAL_ENV = { ...process.env };
 
-function mockGetResolves(body: unknown) {
-  mockedAxios.get.mockResolvedValue({ data: body });
-}
-
 describe('CandlesService', () => {
   let service: CandlesService;
+  let mockFetcher: jest.Mock;
 
   beforeEach(() => {
     service = new CandlesService();
     process.env.ALPACA_API_KEY_ID = 'test-key';
     process.env.ALPACA_API_SECRET_KEY = 'test-secret';
+    mockFetcher = fetchersModule.fetchers.alpaca as jest.Mock;
   });
 
   afterEach(() => {
     process.env = { ...ORIGINAL_ENV };
-    jest.resetAllMocks();
+    jest.clearAllMocks();
   });
 
-  it('fetches bars and maps them to candles sorted ascending by time', async () => {
-    mockGetResolves({
-      symbol: 'SPY',
-      next_page_token: null,
-      bars: [
-        { t: '2026-06-19T04:00:00Z', o: 2, h: 5, l: 1, c: 4, v: 200 },
-        { t: '2026-06-18T04:00:00Z', o: 1, h: 4, l: 0.5, c: 3, v: 100 },
-      ],
-    });
+  it('delegates to the default alpaca fetcher', async () => {
+    const testCandles = [
+      { time: 1718659200, open: 1, high: 4, low: 0.5, close: 3, volume: 100 },
+      { time: 1718745600, open: 2, high: 5, low: 1, close: 4, volume: 200 },
+    ];
+    mockFetcher.mockResolvedValue(testCandles);
 
     const candles = await service.getCandles('SPY', 2);
 
@@ -41,41 +38,16 @@ describe('CandlesService', () => {
     expect(candles[0].time).toBeLessThan(candles[1].time);
     expect(candles[0].close).toBe(3);
     expect(candles[1].close).toBe(4);
+    expect(mockFetcher).toHaveBeenCalledWith('SPY', 2);
   });
 
-  it('sends the Alpaca credential headers', async () => {
-    mockGetResolves({
-      next_page_token: null,
-      bars: [{ t: '2026-06-18T04:00:00Z', o: 1, h: 4, l: 0.5, c: 3, v: 100 }],
-    });
-
-    await service.getCandles('SPY', 1);
-
-    const [, config] = mockedAxios.get.mock.calls[0];
-    expect(config?.headers?.['APCA-API-KEY-ID']).toBe('test-key');
-    expect(config?.headers?.['APCA-API-SECRET-KEY']).toBe('test-secret');
-  });
-
-  it('throws when credentials are missing', async () => {
-    delete process.env.ALPACA_API_KEY_ID;
-    delete process.env.ALPACA_API_SECRET_KEY;
+  it('throws when provider is unknown', async () => {
+    process.env.MARKET_DATA_PROVIDER = 'nonexistent';
     await expect(service.getCandles('SPY', 1)).rejects.toThrow(HttpException);
   });
 
-  it('throws when Alpaca responds with a non-2xx status', async () => {
-    const err = new AxiosError('Request failed');
-    err.response = { status: 403 } as AxiosError['response'];
-    mockedAxios.get.mockRejectedValue(err);
-    await expect(service.getCandles('SPY', 1)).rejects.toThrow(HttpException);
-  });
-
-  it('throws when Alpaca returns no bars', async () => {
-    mockGetResolves({ bars: null, next_page_token: null });
-    await expect(service.getCandles('SPY', 1)).rejects.toThrow(HttpException);
-  });
-
-  it('throws when the network request fails', async () => {
-    mockedAxios.get.mockRejectedValue(new Error('boom'));
-    await expect(service.getCandles('SPY', 1)).rejects.toThrow(HttpException);
+  it('throws when fetcher throws', async () => {
+    mockFetcher.mockRejectedValue(new Error('network error'));
+    await expect(service.getCandles('SPY', 1)).rejects.toThrow('network error');
   });
 });
