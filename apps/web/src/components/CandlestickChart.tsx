@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDrawingTools, type DrawingState } from '../hooks/useDrawingTools';
+import { useTextTool } from '../hooks/useTextTool';
+import { TextEditor } from './TextEditor';
+import { TextPrimitive } from '../drawings/TextPrimitive';
 import {
   CandlestickSeries,
   createChart,
@@ -28,6 +31,7 @@ export function CandlestickChart({
   const drawingStateRef = useRef<DrawingState>({ phase: 'idle', finished: [] });
   const crosshairTimeRef = useRef<UTCTimestamp | null>(null);
   const crosshairPriceRef = useRef<number | null>(null);
+  const textPrimitivesRef = useRef<TextPrimitive[]>([]);
 
   useDrawingTools({
     chart,
@@ -36,6 +40,14 @@ export function CandlestickChart({
     drawingStateRef,
     crosshairTimeRef,
     crosshairPriceRef,
+    onToolDeselect,
+  });
+
+  const { editor, updateText, commit, cancel } = useTextTool({
+    chart,
+    series,
+    activeTool,
+    textPrimitivesRef,
     onToolDeselect,
   });
 
@@ -81,5 +93,18 @@ export function CandlestickChart({
     chart?.timeScale().fitContent();
   }, [candles, series, chart]);
 
-  return <div ref={containerRef} className="h-full w-full" />;
+  return (
+    <div ref={containerRef} className="relative h-full w-full">
+      {editor && (
+        <TextEditor
+          x={editor.x}
+          y={editor.y}
+          value={editor.value}
+          onChange={updateText}
+          onCommit={commit}
+          onCancel={cancel}
+        />
+      )}
+    </div>
+  );
 }

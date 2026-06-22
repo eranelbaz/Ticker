@@ -2,10 +2,12 @@ import { classNameMerge } from '../utils/classNameMerge';
 import type { DrawingTool } from '../drawings/types';
 import { LineIcon } from './icons/LineIcon';
 import { RectangleIcon } from './icons/RectangleIcon';
+import { TextIcon } from './icons/TextIcon';
 
 const TOOL_ICONS: Record<DrawingTool, React.ReactNode> = {
   line: <LineIcon />,
   rectangle: <RectangleIcon />,
+  text: <TextIcon />,
 };
 
 type ToolButtonProps = {
@@ -56,6 +58,12 @@ export function DrawingToolbar({ activeTool, onToolSelect }: Props) {
         label="Rectangle"
         tool="rectangle"
         active={activeTool === 'rectangle'}
+        onToggle={toggle}
+      />
+      <ToolButton
+        label="Text"
+        tool="text"
+        active={activeTool === 'text'}
         onToggle={toggle}
       />
     </aside>
