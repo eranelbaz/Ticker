@@ -1,4 +1,5 @@
 import { Candle } from '../candles/candle.interface';
+import axios from 'axios';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
@@ -46,5 +47,37 @@ export function mapBar(bar: AlpacaBar): Candle {
     low: bar.l,
     close: bar.c,
     volume: bar.v,
+  };
+}
+
+export function createFetcher(): (
+  symbol: string,
+  count: number,
+) => Promise<Candle[]> {
+  return async (symbol: string, count: number): Promise<Candle[]> => {
+    const keyId = process.env.ALPACA_API_KEY_ID;
+    const secretKey = process.env.ALPACA_API_SECRET_KEY;
+    if (!keyId || !secretKey) {
+      throw new Error('Alpaca API credentials are not configured');
+    }
+
+    const response = await axios.get<AlpacaBarsResponse>(
+      buildBarsUrl(symbol, count),
+      {
+        headers: {
+          'APCA-API-KEY-ID': keyId,
+          'APCA-API-SECRET-KEY': secretKey,
+        },
+        timeout: 10_000,
+      },
+    );
+    const body: AlpacaBarsResponse = response.data;
+
+    if (!body.bars || body.bars.length === 0) {
+      throw new Error(`No market data returned for symbol ${symbol}`);
+    }
+
+    const bars = body.bars;
+    return bars.map(mapBar).sort((a, b) => a.time - b.time);
   };
 }
