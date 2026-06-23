@@ -53,9 +53,9 @@ describe('CandlesService', () => {
 
     await service.getCandles('SPY', 1);
 
-    const call = mockGetSpy.mock.calls[0] as [string, Record<string, unknown>];
-    expect(call?.[1]?.['APCA-API-KEY-ID']).toBe('test-key');
-    expect(call?.[1]?.['APCA-API-SECRET-KEY']).toBe('test-secret');
+    const call = mockGetSpy.mock.calls.at(-1) as [string, Record<string, unknown>];
+    expect(call?.[1]?.['headers']?.['APCA-API-KEY-ID']).toBe('test-key');
+    expect(call?.[1]?.['headers']?.['APCA-API-SECRET-KEY']).toBe('test-secret');
   });
 
   it('throws when provider is unknown', async () => {
