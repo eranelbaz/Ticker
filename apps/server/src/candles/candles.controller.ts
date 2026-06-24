@@ -18,10 +18,10 @@ export class CandlesController {
   constructor(private readonly candlesService: CandlesService) {}
 
   @Get(':symbol')
-  getCandles(
+  async getCandles(
     @Param('symbol') symbol: string,
     @Query('count', new DefaultValuePipe(300), ParseIntPipe) count: number,
-  ): Candle[] {
+  ): Promise<Candle[]> {
     if (count < MIN_COUNT || count > MAX_COUNT) {
       throw new BadRequestException(
         `count must be between ${MIN_COUNT} and ${MAX_COUNT}`,

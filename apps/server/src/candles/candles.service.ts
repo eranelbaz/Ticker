@@ -1,33 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Candle } from './candle.interface';
+import { ProviderName } from '../data-providers/providers.types';
+import { createFetcher } from '../data-providers/alpaca';
 
-const DAY_SECONDS = 86_400;
+const DEFAULT_PROVIDER: ProviderName = 'alpaca';
+
+const fetchers: Record<
+  ProviderName,
+  (symbol: string, count: number) => Promise<Candle[]>
+> = {
+  alpaca: createFetcher(),
+};
 
 @Injectable()
 export class CandlesService {
-  getCandles(_symbol: string, count: number): Candle[] {
-    const candles: Candle[] = [];
-    const nowSec = Math.floor(Date.now() / 1000);
-    const end = Math.floor(nowSec / DAY_SECONDS) * DAY_SECONDS;
-    let lastClose = 100;
+  async getCandles(symbol: string, count: number): Promise<Candle[]> {
+    const providerName: ProviderName =
+      (process.env.MARKET_DATA_PROVIDER as ProviderName) ?? DEFAULT_PROVIDER;
 
-    for (let i = count - 1; i >= 0; i--) {
-      const open = lastClose;
-      const close = Math.max(1, open + (Math.random() - 0.5) * 4);
-      const high = Math.max(open, close) + Math.random() * 2;
-      const low = Math.max(0.5, Math.min(open, close) - Math.random() * 2);
-
-      candles.push({
-        time: end - i * DAY_SECONDS,
-        open,
-        high,
-        low,
-        close,
-        volume: Math.round(1_000 + Math.random() * 9_000),
-      });
-      lastClose = close;
+    const fetcher = fetchers[providerName];
+    if (!fetcher) {
+      throw new HttpException(
+        `Unknown market data provider: ${providerName}`,
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
     }
 
-    return candles;
+    try {
+      return await fetcher(symbol, count);
+    } catch (err) {
+      throw new HttpException((err as Error).message, HttpStatus.BAD_GATEWAY);
+    }
   }
 }
