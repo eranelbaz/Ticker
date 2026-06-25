@@ -16,12 +16,14 @@ import { chartTheme } from '../config/chartTheme';
 
 type Props = {
   candles: Candle[];
+  liveCandle?: Candle | null;
   activeTool?: DrawingTool | null;
   onToolDeselect?: () => void;
 };
 
 export function CandlestickChart({
   candles,
+  liveCandle,
   activeTool = null,
   onToolDeselect,
 }: Props) {
@@ -92,6 +94,18 @@ export function CandlestickChart({
     );
     chart?.timeScale().fitContent();
   }, [candles, series, chart]);
+
+  useEffect(() => {
+    if (!series || !liveCandle) return;
+
+    series.update({
+      time: Math.floor(liveCandle.time) as UTCTimestamp,
+      open: liveCandle.open,
+      high: liveCandle.high,
+      low: liveCandle.low,
+      close: liveCandle.close,
+    });
+  }, [liveCandle, series]);
 
   return (
     <div ref={containerRef} className="relative h-full w-full">

@@ -202,6 +202,37 @@ describe('CandlestickChart', () => {
     expect(onToolDeselect).toHaveBeenCalledTimes(1);
   });
 
+  it('updates the live candle via series.update, not setData', () => {
+    const mockUpdate = jest.fn();
+    const liveSeries = {
+      ...mockSeries,
+      update: mockUpdate,
+    };
+    mockChart.addSeries.mockReturnValue(liveSeries);
+
+    const liveCandle: Candle = {
+      time: 100,
+      open: 50,
+      high: 55,
+      low: 48,
+      close: 52,
+      volume: 200,
+    };
+
+    render(
+      <CandlestickChart candles={candles} liveCandle={liveCandle} />,
+    );
+
+    // Wait for the useEffect to run
+    expect(mockUpdate).toHaveBeenCalledWith({
+      time: 100,
+      open: 50,
+      high: 55,
+      low: 48,
+      close: 52,
+    });
+  });
+
   it('cancels mid-drawing and calls onToolDeselect when Escape is pressed during placement', () => {
     const onToolDeselect = jest.fn();
     render(

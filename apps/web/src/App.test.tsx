@@ -2,6 +2,19 @@ import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from './test/server';
 
+class FakeEventSource {
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  close(): void {
+    this.onmessage = null;
+  }
+}
+
+beforeEach(() => {
+  (global as any).EventSource = jest.fn().mockImplementation(
+    () => new FakeEventSource(),
+  );
+});
+
 type DrawingTool = 'line' | 'rectangle';
 
 jest.mock('./components/CandlestickChart', () => ({
@@ -9,6 +22,7 @@ jest.mock('./components/CandlestickChart', () => ({
     activeTool,
   }: {
     candles: unknown[];
+    liveCandle?: unknown;
     activeTool?: DrawingTool | null;
     onToolDeselect?: () => void;
   }) => <div>drawing tool is {activeTool === null ? 'null' : activeTool}</div>,

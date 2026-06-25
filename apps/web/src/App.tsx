@@ -4,9 +4,11 @@ import { CandlestickChart } from './components/CandlestickChart';
 import type { Candle } from '@ticker/server';
 import type { DrawingTool } from './drawings/types';
 import { DrawingToolbar } from './components/DrawingToolbar';
+import { useLiveCandles } from './hooks/useLiveCandles';
 
 const DEFAULT_SYMBOL = 'SPY';
 const DEFAULT_COUNT = 300;
+const DEFAULT_TIMEFRAME = '1Min';
 
 export default function App() {
   const [candles, setCandles] = useState<Candle[]>([]);
@@ -14,9 +16,11 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTool, setActiveTool] = useState<DrawingTool | null>(null);
 
+  const liveCandle = useLiveCandles(DEFAULT_SYMBOL, DEFAULT_TIMEFRAME);
+
   useEffect(() => {
     let cancelled = false;
-    fetchCandles(DEFAULT_SYMBOL, DEFAULT_COUNT)
+    fetchCandles(DEFAULT_SYMBOL, DEFAULT_COUNT, DEFAULT_TIMEFRAME)
       .then((data) => {
         if (!cancelled) {
           setCandles(data);
@@ -53,6 +57,7 @@ export default function App() {
       <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
       <CandlestickChart
         candles={candles}
+        liveCandle={liveCandle}
         activeTool={activeTool}
         onToolDeselect={() => setActiveTool(null)}
       />
