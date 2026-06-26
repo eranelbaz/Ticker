@@ -35,7 +35,7 @@ export class CandlesController {
   getConfig() {
     const provider = process.env.MARKET_DATA_PROVIDER;
     return {
-      defaultSymbol: provider === 'mock-provider' ? 'FAKEPACA' : 'SPY',
+      defaultSymbol: provider === 'mock-provider' ? 'FAKE' : 'SPY',
       defaultTimeframe: '1Min',
     };
   }

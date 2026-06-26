@@ -42,10 +42,10 @@ describe('CandlesController', () => {
     });
   });
 
-  it('returns default symbol FAKEPACA when provider is mock-provider', () => {
+  it('returns default symbol FAKE when provider is mock-provider', () => {
     process.env.MARKET_DATA_PROVIDER = 'mock-provider';
     expect(controller.getConfig()).toEqual({
-      defaultSymbol: 'FAKEPACA',
+      defaultSymbol: 'FAKE',
       defaultTimeframe: '1Min',
     });
   });

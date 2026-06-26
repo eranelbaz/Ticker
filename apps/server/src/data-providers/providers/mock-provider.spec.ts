@@ -1,7 +1,7 @@
 import { MockProvider } from './mock-provider';
 import { timeframeToSeconds } from '../../candles/timeframe';
 
-const FAKE_SYMBOL = 'FAKEPACA';
+const FAKE_SYMBOL = 'FAKE';
 const OTHER_SYMBOL = 'SPY';
 const FAKE_BASE_PRICE = 100;
 const FAKE_VOLATILITY = 0.002;
@@ -26,7 +26,7 @@ describe('MockProvider', () => {
       }
     });
 
-    it('generates candles with a base price near 100 for FAKEPACA', async () => {
+    it('generates candles with a base price near 100 for FAKE', async () => {
       const candles = await provider.getHistoricalData(FAKE_SYMBOL, 5);
       const margin = FAKE_BASE_PRICE * FAKE_VOLATILITY;
       for (const candle of candles) {
