@@ -54,6 +54,9 @@ import App from './App';
 describe('App', () => {
   it('fetches candles and renders the chart', async () => {
     server.use(
+      http.get('*/api/candles/config', () =>
+        HttpResponse.json({ defaultSymbol: 'SPY', defaultTimeframe: '1Min' }),
+      ),
       http.get('*/api/candles/:symbol', () =>
         HttpResponse.json([
           { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
@@ -68,6 +71,9 @@ describe('App', () => {
 
   it('shows an error message when the request fails', async () => {
     server.use(
+      http.get('*/api/candles/config', () =>
+        HttpResponse.json({ defaultSymbol: 'SPY', defaultTimeframe: '1Min' }),
+      ),
       http.get('*/api/candles/:symbol', () =>
         HttpResponse.json(null, { status: 500 }),
       ),

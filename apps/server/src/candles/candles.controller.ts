@@ -29,4 +29,13 @@ export class CandlesController {
     }
     return this.candlesService.getCandles(symbol, count);
   }
+
+  @Get('config')
+  getConfig() {
+    const provider = process.env.MARKET_DATA_PROVIDER;
+    return {
+      defaultSymbol: provider === 'alpaca-fake' ? 'FAKEPACA' : 'SPY',
+      defaultTimeframe: '1Min',
+    };
+  }
 }

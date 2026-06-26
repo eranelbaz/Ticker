@@ -33,4 +33,28 @@ describe('CandlesController', () => {
     );
     expect(service.getCandles).not.toHaveBeenCalled();
   });
+
+  it('returns default symbol SPY when provider is not alpaca-fake', () => {
+    process.env.MARKET_DATA_PROVIDER = 'alpaca';
+    expect(controller.getConfig()).toEqual({
+      defaultSymbol: 'SPY',
+      defaultTimeframe: '1Min',
+    });
+  });
+
+  it('returns default symbol FAKEPACA when provider is alpaca-fake', () => {
+    process.env.MARKET_DATA_PROVIDER = 'alpaca-fake';
+    expect(controller.getConfig()).toEqual({
+      defaultSymbol: 'FAKEPACA',
+      defaultTimeframe: '1Min',
+    });
+  });
+
+  it('returns default symbol SPY when provider is unset', () => {
+    delete process.env.MARKET_DATA_PROVIDER;
+    expect(controller.getConfig()).toEqual({
+      defaultSymbol: 'SPY',
+      defaultTimeframe: '1Min',
+    });
+  });
 });
