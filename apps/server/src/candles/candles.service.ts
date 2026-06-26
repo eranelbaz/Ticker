@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Candle } from './candle.interface';
-import { ProviderName } from '../data-providers/providers.types';
-import { createFetcher } from '../data-providers/alpaca';
+import type { ProviderName } from '../data-providers/providers';
+import { createAlpacaFetcher, createAlpacaFakeFetcher } from '../data-providers/providers';
 
 const DEFAULT_PROVIDER: ProviderName = 'alpaca';
 
@@ -9,7 +9,8 @@ const fetchers: Record<
   ProviderName,
   (symbol: string, count: number) => Promise<Candle[]>
 > = {
-  alpaca: createFetcher(),
+  alpaca: createAlpacaFetcher(),
+  'alpaca-fake': createAlpacaFakeFetcher(),
 };
 
 @Injectable()

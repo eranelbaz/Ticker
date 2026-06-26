@@ -1,16 +1,16 @@
-import { createFakeFetcher } from './alpaca-fake';
-import { timeframeToSeconds } from '../candles/timeframe';
+import { createAlpacaFakeFetcher } from './alpaca-fake';
+import { timeframeToSeconds } from '../../candles/timeframe';
 
 const FAKE_SYMBOL = 'FAKEPACA';
 const OTHER_SYMBOL = 'SPY';
 const FAKE_BASE_PRICE = 100;
 const FAKE_VOLATILITY = 0.002;
 
-describe('createFakeFetcher', () => {
-  let fetcher: ReturnType<typeof createFakeFetcher>;
+describe('createAlpacaFakeFetcher', () => {
+  let fetcher: ReturnType<typeof createAlpacaFakeFetcher>;
 
   beforeEach(() => {
-    fetcher = createFakeFetcher();
+    fetcher = createAlpacaFakeFetcher();
   });
 
   it('returns an array of candles', async () => {

@@ -50,7 +50,7 @@ export function mapBar(bar: AlpacaBar): Candle {
   };
 }
 
-export function createFetcher(): (
+export function createAlpacaFetcher(): (
   symbol: string,
   count: number,
 ) => Promise<Candle[]> {
