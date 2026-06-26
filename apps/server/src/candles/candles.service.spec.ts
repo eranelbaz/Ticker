@@ -1,6 +1,6 @@
-import { HttpException } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import { CandlesService } from './candles.service';
+import { AlpacaProvider } from '../data-providers/providers';
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -13,7 +13,6 @@ describe('CandlesService', () => {
   let mockGetSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    service = new CandlesService();
     process.env.ALPACA_API_KEY_ID = 'test-key';
     process.env.ALPACA_API_SECRET_KEY = 'test-secret';
     mockGetSpy = jest
@@ -37,6 +36,7 @@ describe('CandlesService', () => {
       ],
     });
 
+    const service = new CandlesService(new AlpacaProvider());
     const candles = await service.getCandles('SPY', 2);
 
     expect(candles).toHaveLength(2);
@@ -51,6 +51,7 @@ describe('CandlesService', () => {
       bars: [{ t: '2026-06-18T04:00:00Z', o: 1, h: 4, l: 0.5, c: 3, v: 100 }],
     });
 
+    const service = new CandlesService(new AlpacaProvider());
     await service.getCandles('SPY', 1);
 
     const call = mockGetSpy.mock.calls.at(-1) as [string, Record<string, unknown>];
@@ -58,14 +59,11 @@ describe('CandlesService', () => {
     expect(call?.[1]?.['headers']?.['APCA-API-SECRET-KEY']).toBe('test-secret');
   });
 
-  it('throws when provider is unknown', async () => {
-    process.env.MARKET_DATA_PROVIDER = 'nonexistent';
-    await expect(service.getCandles('SPY', 1)).rejects.toThrow(HttpException);
-  });
-
   it('throws when credentials are missing', async () => {
     delete process.env.ALPACA_API_KEY_ID;
     delete process.env.ALPACA_API_SECRET_KEY;
+
+    const service = new CandlesService(new AlpacaProvider());
     await expect(service.getCandles('SPY', 1)).rejects.toThrow(
       'Alpaca API credentials are not configured',
     );
@@ -73,6 +71,8 @@ describe('CandlesService', () => {
 
   it('throws when Alpaca returns no bars', async () => {
     mockGetResolves({ bars: null, next_page_token: null });
+
+    const service = new CandlesService(new AlpacaProvider());
     await expect(service.getCandles('SPY', 1)).rejects.toThrow(
       'No market data returned for symbol SPY',
     );
@@ -80,6 +80,8 @@ describe('CandlesService', () => {
 
   it('throws on network failure', async () => {
     mockGetSpy.mockRejectedValue(new Error('boom'));
+
+    const service = new CandlesService(new AlpacaProvider());
     await expect(service.getCandles('SPY', 1)).rejects.toThrow('boom');
   });
 });

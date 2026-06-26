@@ -1,34 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Inject } from '@nestjs/common';
 import { Candle } from './candle.interface';
-import type { ProviderName } from '../data-providers/providers';
-import { createAlpacaFetcher, createMockProviderFetcher } from '../data-providers/providers';
-
-const DEFAULT_PROVIDER: ProviderName = 'alpaca';
-
-const fetchers: Record<
-  ProviderName,
-  (symbol: string, count: number) => Promise<Candle[]>
-> = {
-  alpaca: createAlpacaFetcher(),
-  'mock-provider': createMockProviderFetcher(),
-};
+import { DataProvider, DATA_PROVIDER } from '../data-providers/providers';
 
 @Injectable()
 export class CandlesService {
-  async getCandles(symbol: string, count: number): Promise<Candle[]> {
-    const providerName: ProviderName =
-      (process.env.MARKET_DATA_PROVIDER as ProviderName) ?? DEFAULT_PROVIDER;
+  constructor(
+    @Inject(DATA_PROVIDER) private readonly provider: DataProvider,
+  ) {}
 
-    const fetcher = fetchers[providerName];
-    if (!fetcher) {
-      throw new HttpException(
-        `Unknown market data provider: ${providerName}`,
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
-    }
-
+  async getCandles(symbol: string, count: number, timeframe: string = '1Day'): Promise<Candle[]> {
     try {
-      return await fetcher(symbol, count);
+      return await this.provider.getHistoricalData(symbol, count, timeframe);
     } catch (err) {
       throw new HttpException((err as Error).message, HttpStatus.BAD_GATEWAY);
     }

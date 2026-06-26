@@ -21,13 +21,14 @@ export class CandlesController {
   async getCandles(
     @Param('symbol') symbol: string,
     @Query('count', new DefaultValuePipe(300), ParseIntPipe) count: number,
+    @Query('timeframe', new DefaultValuePipe('1Day')) timeframe: string,
   ): Promise<Candle[]> {
     if (count < MIN_COUNT || count > MAX_COUNT) {
       throw new BadRequestException(
         `count must be between ${MIN_COUNT} and ${MAX_COUNT}`,
       );
     }
-    return this.candlesService.getCandles(symbol, count);
+    return this.candlesService.getCandles(symbol, count, timeframe);
   }
 
   @Get('config')

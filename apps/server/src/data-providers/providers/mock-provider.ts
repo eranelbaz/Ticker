@@ -3,7 +3,7 @@ import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Candle } from '../../candles/candle.interface';
 import { timeframeToSeconds } from '../../candles/timeframe';
-import { StreamService } from '../stream-service';
+import { DataProvider } from './types';
 
 function generateFakeCandles(
   symbol: string,
@@ -45,10 +45,14 @@ function generateFakeCandles(
 const EMIT_INTERVAL_MS = 1000;
 
 @Injectable()
-export class MockProviderStreamService implements StreamService {
+export class MockProvider implements DataProvider {
   private readonly streams = new Map<string, Observable<Candle>>();
 
-  minuteBars(symbol: string, _timeframe?: string): Observable<Candle> {
+  getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]> {
+    return Promise.resolve(generateFakeCandles(symbol, count, timeframe));
+  }
+
+  getStreamData(symbol: string): Observable<Candle> {
     const existing = this.streams.get(symbol);
     if (existing) {
       return existing;
@@ -82,15 +86,3 @@ export class MockProviderStreamService implements StreamService {
     return stream;
   }
 }
-
-export function createMockProviderFetcher() {
-  return (
-    symbol: string,
-    count: number,
-    timeframe?: string,
-  ): Promise<Candle[]> => {
-    return Promise.resolve(generateFakeCandles(symbol, count, timeframe));
-  };
-}
-
-

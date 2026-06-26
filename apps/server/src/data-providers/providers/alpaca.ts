@@ -1,5 +1,7 @@
-import { Candle } from '../candles/candle.interface';
+import { Injectable } from '@nestjs/common';
 import axios from 'axios';
+import { Candle } from '../candles/candle.interface';
+import { DataProvider } from './types';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
@@ -50,11 +52,9 @@ export function mapBar(bar: AlpacaBar): Candle {
   };
 }
 
-export function createAlpacaFetcher(): (
-  symbol: string,
-  count: number,
-) => Promise<Candle[]> {
-  return async (symbol: string, count: number): Promise<Candle[]> => {
+@Injectable()
+export class AlpacaProvider implements DataProvider {
+  async getHistoricalData(symbol: string, count: number): Promise<Candle[]> {
     const keyId = process.env.ALPACA_API_KEY_ID;
     const secretKey = process.env.ALPACA_API_SECRET_KEY;
     if (!keyId || !secretKey) {
@@ -79,5 +79,9 @@ export function createAlpacaFetcher(): (
 
     const bars = body.bars;
     return bars.map(mapBar).sort((a, b) => a.time - b.time);
-  };
+  }
+
+  getStreamData(symbol: string) {
+    throw new Error('Real-time streaming not implemented for alpaca provider');
+  }
 }

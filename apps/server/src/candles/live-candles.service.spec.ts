@@ -2,10 +2,11 @@ import { Subject } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 import { LiveCandlesService } from './live-candles.service';
 import { Candle } from './candle.interface';
+import { DataProvider } from '../data-providers/providers';
 
 describe('LiveCandlesService', () => {
   let liveService: LiveCandlesService;
-  let streamService: { minuteBars: jest.Mock };
+  let dataProvider: DataProvider;
   let subject: Subject<Candle>;
 
   const bars: Candle[] = [
@@ -15,24 +16,22 @@ describe('LiveCandlesService', () => {
 
   beforeEach(() => {
     subject = new Subject<Candle>();
-    streamService = { minuteBars: jest.fn().mockReturnValue(subject) };
-    liveService = new LiveCandlesService(streamService as never);
+    dataProvider = {
+      getHistoricalData: jest.fn(),
+      getStreamData: jest.fn().mockReturnValue(subject),
+    };
+    liveService = new LiveCandlesService(dataProvider as never);
   });
 
-  it('passes minute bars through unchanged', async () => {
-    const promise = liveService.stream('SPY', '1Day').pipe(toArray()).toPromise();
+  it('passes stream data through unchanged', async () => {
+    const promise = liveService.stream('SPY').pipe(toArray()).toPromise();
     bars.forEach((b) => subject.next(b));
     subject.complete();
     await expect(promise).resolves.toEqual(bars);
   });
 
-  it('subscribes to the stream service for the symbol', () => {
-    liveService.stream('AAPL', '1Hour');
-    expect(streamService.minuteBars).toHaveBeenCalledWith('AAPL', '1Hour');
-  });
-
-  it('defaults timeframe to 1Min', () => {
-    liveService.stream('SPY');
-    expect(streamService.minuteBars).toHaveBeenCalledWith('SPY', '1Min');
+  it('subscribes to the data provider for the symbol', () => {
+    liveService.stream('AAPL');
+    expect(dataProvider.getStreamData).toHaveBeenCalledWith('AAPL');
   });
 });

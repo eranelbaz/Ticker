@@ -16,8 +16,8 @@ describe('CandlesController', () => {
     ];
     service.getCandles.mockResolvedValue(candles);
 
-    await expect(controller.getCandles('SPY', 10)).resolves.toEqual(candles);
-    expect(service.getCandles).toHaveBeenCalledWith('SPY', 10);
+    await expect(controller.getCandles('SPY', 10, '1Day')).resolves.toEqual(candles);
+    expect(service.getCandles).toHaveBeenCalledWith('SPY', 10, '1Day');
   });
 
   it('rejects count above the maximum', async () => {
