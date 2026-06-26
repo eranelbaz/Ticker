@@ -1,1 +1,1 @@
-export type ProviderName = 'alpaca';
+export type ProviderName = 'alpaca' | 'alpaca-fake';
