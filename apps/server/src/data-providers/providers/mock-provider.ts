@@ -45,7 +45,7 @@ function generateFakeCandles(
 const EMIT_INTERVAL_MS = 1000;
 
 @Injectable()
-export class AlpacaFakeStreamService implements StreamService {
+export class MockProviderStreamService implements StreamService {
   private readonly streams = new Map<string, Observable<Candle>>();
 
   minuteBars(symbol: string, _timeframe?: string): Observable<Candle> {
@@ -83,7 +83,7 @@ export class AlpacaFakeStreamService implements StreamService {
   }
 }
 
-export function createAlpacaFakeFetcher() {
+export function createMockProviderFetcher() {
   return (
     symbol: string,
     count: number,

@@ -1,4 +1,4 @@
-export type ProviderName = 'alpaca' | 'alpaca-fake';
+export type ProviderName = 'alpaca' | 'mock-provider';
 
 export { createAlpacaFetcher } from './alpaca';
-export { createAlpacaFakeFetcher, AlpacaFakeStreamService } from './alpaca-fake';
+export { createMockProviderFetcher, MockProviderStreamService } from './mock-provider';

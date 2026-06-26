@@ -1,4 +1,4 @@
-import { createAlpacaFakeFetcher } from './alpaca-fake';
+import { createMockProviderFetcher } from './mock-provider';
 import { timeframeToSeconds } from '../../candles/timeframe';
 
 const FAKE_SYMBOL = 'FAKEPACA';
@@ -6,11 +6,11 @@ const OTHER_SYMBOL = 'SPY';
 const FAKE_BASE_PRICE = 100;
 const FAKE_VOLATILITY = 0.002;
 
-describe('createAlpacaFakeFetcher', () => {
-  let fetcher: ReturnType<typeof createAlpacaFakeFetcher>;
+describe('createMockProviderFetcher', () => {
+  let fetcher: ReturnType<typeof createMockProviderFetcher>;
 
   beforeEach(() => {
-    fetcher = createAlpacaFakeFetcher();
+    fetcher = createMockProviderFetcher();
   });
 
   it('returns an array of candles', async () => {

@@ -34,7 +34,7 @@ describe('CandlesController', () => {
     expect(service.getCandles).not.toHaveBeenCalled();
   });
 
-  it('returns default symbol SPY when provider is not alpaca-fake', () => {
+  it('returns default symbol SPY when provider is not mock-provider', () => {
     process.env.MARKET_DATA_PROVIDER = 'alpaca';
     expect(controller.getConfig()).toEqual({
       defaultSymbol: 'SPY',
@@ -42,8 +42,8 @@ describe('CandlesController', () => {
     });
   });
 
-  it('returns default symbol FAKEPACA when provider is alpaca-fake', () => {
-    process.env.MARKET_DATA_PROVIDER = 'alpaca-fake';
+  it('returns default symbol FAKEPACA when provider is mock-provider', () => {
+    process.env.MARKET_DATA_PROVIDER = 'mock-provider';
     expect(controller.getConfig()).toEqual({
       defaultSymbol: 'FAKEPACA',
       defaultTimeframe: '1Min',
