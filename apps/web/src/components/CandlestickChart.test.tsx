@@ -23,6 +23,7 @@ const paneMock = {
 
 const mockChart = {
   addSeries: jest.fn(() => mockSeries),
+  applyOptions: jest.fn(),
   timeScale: () => ({ fitContent: mockFitContent }),
   remove: mockRemove,
   subscribeClick: mockSubscribeClick,

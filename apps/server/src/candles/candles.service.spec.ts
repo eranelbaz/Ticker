@@ -78,6 +78,20 @@ describe('CandlesService', () => {
     );
   });
 
+  it('returns an empty array when bars are empty and ALLOW_EMPTY_HISTORY is true', async () => {
+    process.env.ALLOW_EMPTY_HISTORY = 'true';
+    mockGetResolves({ bars: [], next_page_token: null });
+    await expect(service.getCandles('FAKEPACA', 1)).resolves.toEqual([]);
+  });
+
+  it('still throws on empty bars when ALLOW_EMPTY_HISTORY is not set', async () => {
+    delete process.env.ALLOW_EMPTY_HISTORY;
+    mockGetResolves({ bars: [], next_page_token: null });
+    await expect(service.getCandles('SPY', 1)).rejects.toThrow(
+      'No market data returned for symbol SPY',
+    );
+  });
+
   it('throws on network failure', async () => {
     mockGetSpy.mockRejectedValue(new Error('boom'));
     await expect(service.getCandles('SPY', 1)).rejects.toThrow('boom');

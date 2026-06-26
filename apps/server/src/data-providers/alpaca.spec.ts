@@ -26,6 +26,16 @@ describe('buildBarsUrl', () => {
     const url = buildBarsUrl('BRK.B', 10, now);
     expect(url).toContain('/v2/stocks/BRK.B/bars');
   });
+
+  it('defaults timeframe to 1Day', () => {
+    const url = new URL(buildBarsUrl('SPY', 300, now));
+    expect(url.searchParams.get('timeframe')).toBe('1Day');
+  });
+
+  it('uses the provided timeframe', () => {
+    const url = new URL(buildBarsUrl('SPY', 300, now, '1Hour'));
+    expect(url.searchParams.get('timeframe')).toBe('1Hour');
+  });
 });
 
 describe('mapBar', () => {

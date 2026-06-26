@@ -23,6 +23,25 @@ describe('fetchCandles', () => {
     expect(url.searchParams.get('count')).toBe('300');
   });
 
+  it('passes timeframe as a query param', async () => {
+    let requestedUrl = '';
+    server.use(
+      http.get('*/api/candles/:symbol', ({ request }) => {
+        requestedUrl = request.url;
+        return HttpResponse.json(candles);
+      }),
+    );
+
+    await expect(fetchCandles('BTCUSD', 300, '1Min')).resolves.toEqual(
+      candles,
+    );
+
+    const url = new URL(requestedUrl);
+    expect(url.pathname).toBe('/api/candles/BTCUSD');
+    expect(url.searchParams.get('count')).toBe('300');
+    expect(url.searchParams.get('timeframe')).toBe('1Min');
+  });
+
   it('throws on a non-OK response', async () => {
     server.use(
       http.get('*/api/candles/:symbol', () =>

@@ -1,5 +1,6 @@
 import { Candle } from '../candles/candle.interface';
 import axios from 'axios';
+import { timeframeToSeconds } from '../candles/timeframe';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
@@ -26,10 +27,13 @@ export function buildBarsUrl(
   symbol: string,
   count: number,
   now: Date = new Date(),
+  timeframe: string = '1Day',
 ): string {
-  const start = new Date(now.getTime() - (count * 2 + 5) * DAY_MS);
+  const secondsPerBar = timeframeToSeconds(timeframe);
+  const lookbackMs = secondsPerBar * 1000 * (count * 2 + 5);
+  const start = new Date(now.getTime() - lookbackMs);
   const params = new URLSearchParams({
-    timeframe: '1Day',
+    timeframe,
     feed: 'iex',
     sort: 'desc',
     limit: String(count),
@@ -53,8 +57,13 @@ export function mapBar(bar: AlpacaBar): Candle {
 export function createFetcher(): (
   symbol: string,
   count: number,
+  timeframe?: string,
 ) => Promise<Candle[]> {
-  return async (symbol: string, count: number): Promise<Candle[]> => {
+  return async (
+    symbol: string,
+    count: number,
+    timeframe: string = '1Day',
+  ): Promise<Candle[]> => {
     const keyId = process.env.ALPACA_API_KEY_ID;
     const secretKey = process.env.ALPACA_API_SECRET_KEY;
     if (!keyId || !secretKey) {
@@ -62,7 +71,7 @@ export function createFetcher(): (
     }
 
     const response = await axios.get<AlpacaBarsResponse>(
-      buildBarsUrl(symbol, count),
+      buildBarsUrl(symbol, count, new Date(), timeframe),
       {
         headers: {
           'APCA-API-KEY-ID': keyId,
@@ -74,6 +83,9 @@ export function createFetcher(): (
     const body: AlpacaBarsResponse = response.data;
 
     if (!body.bars || body.bars.length === 0) {
+      if (process.env.ALLOW_EMPTY_HISTORY === 'true') {
+        return [];
+      }
       throw new Error(`No market data returned for symbol ${symbol}`);
     }
 
