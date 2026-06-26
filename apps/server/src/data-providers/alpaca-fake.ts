@@ -9,7 +9,7 @@ function generateFakeCandles(
   const now = new Date();
   const candles: Candle[] = [];
 
-  let basePrice = symbol === 'FAKEPACA' ? 100 : 50;
+  const basePrice = 100;
   const intervalSeconds = timeframeToSeconds(timeframe);
   const nowSeconds = Math.floor(now.getTime() / 1000);
 

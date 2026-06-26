@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Candle } from '../candles/candle.interface';
-import { IStreamService } from './stream-service';
+import { StreamService } from './stream-service';
 
 const EMIT_INTERVAL_MS = 1000;
 
 @Injectable()
-export class FakeStreamService implements IStreamService {
+export class FakeStreamService implements StreamService {
   private readonly streams = new Map<string, Observable<Candle>>();
 
   minuteBars(symbol: string, _timeframe?: string): Observable<Candle> {
@@ -16,7 +16,7 @@ export class FakeStreamService implements IStreamService {
       return existing;
     }
 
-    let basePrice = symbol === 'FAKEPACA' ? 100 : 50;
+    let basePrice = 100;
 
     const stream = interval(EMIT_INTERVAL_MS).pipe(
       map(() => {
@@ -29,8 +29,6 @@ export class FakeStreamService implements IStreamService {
         const volume = Math.floor(Math.random() * 100000) + 1000;
         basePrice = close;
 
-        // Real wall-clock time so bucket rollover tracks real minutes; emits
-        // within the same minute share a bucket and merge on the client.
         return {
           time: Math.floor(Date.now() / 1000),
           open: Math.round(open * 100) / 100,
