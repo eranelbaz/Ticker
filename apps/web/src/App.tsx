@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { fetchCandles } from './api/candles';
+import { fetchConfig } from './api/config';
 import { CandlestickChart } from './components/CandlestickChart';
 import type { Candle } from '@ticker/server';
 import type { DrawingTool } from './drawings/types';
 import { DrawingToolbar } from './components/DrawingToolbar';
 import { useLiveCandles } from './hooks/useLiveCandles';
 
-const DEFAULT_SYMBOL = 'SPY';
 const DEFAULT_COUNT = 300;
 const DEFAULT_TIMEFRAME = '1Min';
 
@@ -15,14 +15,21 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTool, setActiveTool] = useState<DrawingTool | null>(null);
+  const [configSymbol, setConfigSymbol] = useState<string | null>(null);
 
-  const liveCandle = useLiveCandles(DEFAULT_SYMBOL, DEFAULT_TIMEFRAME);
+  const liveCandle = useLiveCandles(configSymbol, DEFAULT_TIMEFRAME);
 
   useEffect(() => {
     let cancelled = false;
-    fetchCandles(DEFAULT_SYMBOL, DEFAULT_COUNT, DEFAULT_TIMEFRAME)
-      .then((data) => {
+    fetchConfig()
+      .then((config) => {
+        setConfigSymbol(config.defaultSymbol);
         if (!cancelled) {
+          return fetchCandles(config.defaultSymbol, DEFAULT_COUNT);
+        }
+      })
+      .then((data) => {
+        if (!cancelled && data) {
           setCandles(data);
           setIsLoading(false);
         }

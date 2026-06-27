@@ -1,5 +1,5 @@
 import { BarAggregator } from './bar-aggregator';
-import { Candle } from './candle.interface';
+import { Candle } from './candle.type';
 
 function c(
   time: number,
