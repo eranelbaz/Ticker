@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Inject } from '@nestjs/common';
-import { Candle } from './candle';
+import { Candle } from './candle.type';
 import { DataProvider, DATA_PROVIDER } from '../data-providers/providers';
 
 @Injectable()
