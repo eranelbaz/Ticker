@@ -2,10 +2,10 @@ import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
 
 const symbol = 'SPY';
-const FAKE = 'FAKE';
+const DEFAULT_SYMBOL = 'FAKE';
 const DEFAULT_TIMEFRAME = '1Min';
 const COUNT_ERROR_MSG = 'count must be between 1 and 1000';
-const MOCK_CONFIG = { defaultSymbol: FAKE, defaultTimeframe: DEFAULT_TIMEFRAME };
+const MOCK_CONFIG = { defaultSymbol: DEFAULT_SYMBOL, defaultTimeframe: DEFAULT_TIMEFRAME };
 const ALPACA_CONFIG = { defaultSymbol: symbol, defaultTimeframe: DEFAULT_TIMEFRAME };
 const SAMPLE_CANDLE = { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 };
 
