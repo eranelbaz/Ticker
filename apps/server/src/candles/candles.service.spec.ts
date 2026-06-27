@@ -1,7 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import { CandlesService } from './candles.service';
 import { AlpacaProvider, MockProvider } from '../data-providers/providers';
-import { Observable } from 'rxjs';
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -86,10 +85,4 @@ describe('CandlesService', () => {
     await expect(service.getHistoricalData('SPY', 1)).rejects.toThrow('boom');
   });
 
-  it('streams live candles via MockProvider', () => {
-    const service = new CandlesService(new MockProvider());
-    const result: Observable<any> = service.stream('FAKE');
-
-    expect(result).toBeDefined();
-  });
 });

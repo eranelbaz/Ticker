@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Candle } from '../../candles/candle.interface';
-import { timeframeToSeconds } from '../../candles/timeframe';
+import { timeframeToSeconds } from './timeframe';
 import { DataProvider } from './types';
 
 function generateFakeCandles(

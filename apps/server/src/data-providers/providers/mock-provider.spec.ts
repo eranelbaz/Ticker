@@ -1,5 +1,5 @@
 import { MockProvider } from './mock-provider';
-import { timeframeToSeconds } from '../../candles/timeframe';
+import { timeframeToSeconds } from './timeframe';
 
 const FAKE_SYMBOL = 'FAKE';
 const OTHER_SYMBOL = 'SPY';
