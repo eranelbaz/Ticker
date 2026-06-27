@@ -12,7 +12,7 @@ import {
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { Candle } from './candle-type';
-import { CandlesService } from './candles-service';
+import { CandlesService } from './candles.service';
 
 export interface LiveCandlesService {
   stream(symbol: string, timeframe: string): Observable<Candle>;

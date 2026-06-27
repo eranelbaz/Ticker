@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Candle } from '../candles/candle-type';
-import { LiveCandlesService } from '../candles/candles-controller';
+import { LiveCandlesService } from '../candles/candles.controller';
 import { MockProvider } from './providers/mock-provider';
 
 @Injectable()

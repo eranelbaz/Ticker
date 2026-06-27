@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { DATA_PROVIDER, getProviderRegistry, ProviderName } from '../data-providers/providers';
 import { DataProvider } from '../data-providers/providers/types';
 import { AlpacaStreamService } from '../data-providers/alpaca-stream-service';
-import { CandlesController, LIVE_CANDLES_SERVICE, LiveCandlesService } from './candles-controller';
-import { CandlesService } from './candles-service';
+import { CandlesController, LIVE_CANDLES_SERVICE, LiveCandlesService } from './candles.controller';
+import { CandlesService } from './candles.service';
 import { MockLiveCandlesService } from '../data-providers/mock-live-candles-service';
 
 function getDataProvider(): DataProvider {

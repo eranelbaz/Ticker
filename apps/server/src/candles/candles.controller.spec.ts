@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
-import { CandlesController, COUNT_ERROR_MSG } from './candles-controller';
-import { CandlesService } from './candles-service';
+import { CandlesController, COUNT_ERROR_MSG } from './candles.controller';
+import { CandlesService } from './candles.service';
 
 const symbol = 'SPY';
 const DEFAULT_SYMBOL = 'FAKE';
