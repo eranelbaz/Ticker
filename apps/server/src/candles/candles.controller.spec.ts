@@ -1,15 +1,25 @@
 import { BadRequestException } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
 import { MessageEvent } from 'stream';
-import { CandlesController } from './candles.controller';
+import { CandlesController, COUNT_ERROR_MSG } from './candles.controller';
+import { CandlesService } from './candles.service';
+
+const symbol = 'SPY';
+const DEFAULT_SYMBOL = 'FAKE';
+const DEFAULT_TIMEFRAME = '1Min';
+const MOCK_CONFIG = { defaultSymbol: DEFAULT_SYMBOL, defaultTimeframe: DEFAULT_TIMEFRAME };
+const DEFAULT_CONFIG = { defaultSymbol: symbol, defaultTimeframe: DEFAULT_TIMEFRAME };
+const SAMPLE_CANDLE = { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 };
 
 describe('CandlesController', () => {
   let controller: CandlesController;
-  let service: { getCandles: jest.Mock };
+  let service: jest.Mocked<CandlesService>;
   let liveService: { stream: jest.Mock };
 
   beforeEach(() => {
-    service = { getCandles: jest.fn() };
+    service = {
+      getHistoricalData: jest.fn(),
+    };
     liveService = { stream: jest.fn() };
     controller = new CandlesController(
       service as any,
@@ -17,41 +27,45 @@ describe('CandlesController', () => {
     );
   });
 
-  it('delegates to the service and returns its candles', async () => {
-    const candles = [
-      { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
-    ];
-    service.getCandles.mockResolvedValue(candles);
+  describe('GET /candles/:symbol', () => {
+    it('returns candles from the service', async () => {
+      service.getHistoricalData.mockResolvedValue([SAMPLE_CANDLE]);
 
-    await expect(controller.getCandles('SPY', 10)).resolves.toEqual(candles);
-    // DefaultValuePipe doesn't apply in unit tests, so timeframe is undefined
-    expect(service.getCandles).toHaveBeenCalledWith('SPY', 10, undefined);
+      await expect(controller.getHistoricalData(symbol, 10, '1Day')).resolves.toEqual([SAMPLE_CANDLE]);
+      expect(service.getHistoricalData).toHaveBeenCalledWith(symbol, 10, '1Day');
+    });
+
+    it('rejects count above the maximum', async () => {
+      await expect(controller.getHistoricalData(symbol, 1001)).rejects.toThrow(COUNT_ERROR_MSG);
+      expect(service.getHistoricalData).not.toHaveBeenCalled();
+    });
+
+    it('rejects count below the minimum', async () => {
+      await expect(controller.getHistoricalData(symbol, 0)).rejects.toThrow(COUNT_ERROR_MSG);
+      expect(service.getHistoricalData).not.toHaveBeenCalled();
+    });
+
+    it('rejects negative count', async () => {
+      await expect(controller.getHistoricalData(symbol, -5)).rejects.toThrow(COUNT_ERROR_MSG);
+      expect(service.getHistoricalData).not.toHaveBeenCalled();
+    });
   });
 
-  it('passes through the timeframe query param', async () => {
-    const candles = [
-      { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
-    ];
-    service.getCandles.mockResolvedValue(candles);
+  describe('GET /candles/config', () => {
+    it('returns FAKE as default symbol when mock-provider', () => {
+      process.env.MARKET_DATA_PROVIDER = 'mock-provider';
+      expect(controller.getConfig()).toEqual(MOCK_CONFIG);
+    });
 
-    await expect(
-      controller.getCandles('SPY', 10, '1Hour'),
-    ).resolves.toEqual(candles);
-    expect(service.getCandles).toHaveBeenCalledWith('SPY', 10, '1Hour');
-  });
+    it('returns SPY as default symbol when alpaca', () => {
+      process.env.MARKET_DATA_PROVIDER = 'alpaca';
+      expect(controller.getConfig()).toEqual(DEFAULT_CONFIG);
+    });
 
-  it('rejects count above the maximum', async () => {
-    await expect(controller.getCandles('SPY', 5000)).rejects.toThrow(
-      BadRequestException,
-    );
-    expect(service.getCandles).not.toHaveBeenCalled();
-  });
-
-  it('rejects count below the minimum', async () => {
-    await expect(controller.getCandles('SPY', -5)).rejects.toThrow(
-      BadRequestException,
-    );
-    expect(service.getCandles).not.toHaveBeenCalled();
+    it('returns SPY as default symbol when unset', () => {
+      delete process.env.MARKET_DATA_PROVIDER;
+      expect(controller.getConfig()).toEqual(DEFAULT_CONFIG);
+    });
   });
 
   describe('stream (SSE)', () => {

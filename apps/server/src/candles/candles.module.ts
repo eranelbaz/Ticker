@@ -1,28 +1,27 @@
 import { Module } from '@nestjs/common';
+import { DataProvider } from '../data-providers/providers/types';
 import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
-import { LiveCandlesService } from './live-candles.service';
-import { AlpacaStreamService } from '../data-providers/alpaca-stream.service';
-import { FakeStreamService } from '../data-providers/fake-stream.service';
-import { STREAM_SERVICE } from '../data-providers/stream-service';
+import { DATA_PROVIDER } from '../data-providers/providers';
+import { ProviderName, getProviderRegistry } from '../data-providers/providers';
 
-function createStreamService() {
-  const provider = process.env.MARKET_DATA_PROVIDER || 'alpaca';
-  if (provider === 'alpaca-fake') {
-    return new FakeStreamService();
-  }
-  return new AlpacaStreamService();
+const DEFAULT_PROVIDER: ProviderName = 'alpaca';
+
+function getDataProvider(): DataProvider {
+  const provider = (process.env.MARKET_DATA_PROVIDER as ProviderName) ?? DEFAULT_PROVIDER;
+  const Ctor = getProviderRegistry()[provider];
+  return new Ctor();
 }
 
 @Module({
   controllers: [CandlesController],
   providers: [
     CandlesService,
-    LiveCandlesService,
     {
-      provide: STREAM_SERVICE,
-      useFactory: () => createStreamService(),
+      provide: DATA_PROVIDER,
+      useValue: getDataProvider(),
     },
   ],
+  exports: [CandlesController],
 })
 export class CandlesModule {}

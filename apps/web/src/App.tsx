@@ -1,31 +1,36 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchCandles } from './api/candles';
+import { fetchConfig } from './api/config';
 import { CandlestickChart } from './components/CandlestickChart';
 import type { Candle } from '@ticker/server';
 import type { DrawingTool } from './drawings/types';
 import { DrawingToolbar } from './components/DrawingToolbar';
-import { DEFAULT_SYMBOL, DEFAULT_TIMEFRAME } from './config';
-import { timeframeToSeconds } from './config/timeframe';
-import { foldLiveBar } from './lib/liveAggregator';
+import { useLiveCandles } from './hooks/useLiveCandles';
 
 const DEFAULT_COUNT = 300;
+const DEFAULT_TIMEFRAME = '1Min';
 
 export default function App() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTool, setActiveTool] = useState<DrawingTool | null>(null);
-  const timeframe: string = DEFAULT_TIMEFRAME;
-  const chartRef = useRef<{ updateCandle: (candle: Candle) => void } | null>(null);
-  const currentCandleRef = useRef<Candle | null>(null);
+  const [configSymbol, setConfigSymbol] = useState<string | null>(null);
+
+  const liveCandle = useLiveCandles(configSymbol, DEFAULT_TIMEFRAME);
 
   useEffect(() => {
     let cancelled = false;
-    fetchCandles(DEFAULT_SYMBOL, DEFAULT_COUNT, timeframe)
-      .then((data) => {
+    fetchConfig()
+      .then((config) => {
+        setConfigSymbol(config.defaultSymbol);
         if (!cancelled) {
+          return fetchCandles(config.defaultSymbol, DEFAULT_COUNT);
+        }
+      })
+      .then((data) => {
+        if (!cancelled && data) {
           setCandles(data);
-          currentCandleRef.current = data.length ? data[data.length - 1] : null;
           setIsLoading(false);
         }
       })
@@ -38,35 +43,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [timeframe]);
-
-  // SSE live data stream
-  useEffect(() => {
-    const tfSeconds = timeframeToSeconds(timeframe);
-    const url = `/api/candles/${DEFAULT_SYMBOL}/stream?timeframe=${encodeURIComponent(timeframe)}`;
-    const source = new EventSource(url);
-
-    source.onmessage = (event: MessageEvent) => {
-      try {
-        const bar = JSON.parse(event.data) as Candle;
-        const prev = currentCandleRef.current;
-        const next = prev ? foldLiveBar(prev, bar, tfSeconds) : bar;
-        currentCandleRef.current = next;
-        chartRef.current?.updateCandle(next);
-      } catch {
-        // ignore parse errors
-      }
-    };
-
-    source.onerror = () => {
-      // Let EventSource auto-reconnect on transient errors;
-      // only close on explicit cleanup (unmount).
-    };
-
-    return () => {
-      source.close();
-    };
-  }, [timeframe]);
+  }, []);
 
   const onToolSelect = (tool: DrawingTool | null) => {
     setActiveTool(tool);
@@ -86,11 +63,10 @@ export default function App() {
     <div className="fixed inset-0 flex bg-chart-bg text-chart-text">
       <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
       <CandlestickChart
-        ref={chartRef}
         candles={candles}
+        liveCandle={liveCandle}
         activeTool={activeTool}
         onToolDeselect={() => setActiveTool(null)}
-        timeframe={timeframe}
       />
     </div>
   );

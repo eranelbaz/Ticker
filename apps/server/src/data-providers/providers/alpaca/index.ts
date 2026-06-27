@@ -1,6 +1,8 @@
-import { Candle } from '../candles/candle.interface';
+import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { timeframeToSeconds } from '../candles/timeframe';
+import { Observable } from 'rxjs';
+import { Candle } from '../../../candles/candle.type';
+import { DataProvider } from '../types';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
@@ -27,13 +29,10 @@ export function buildBarsUrl(
   symbol: string,
   count: number,
   now: Date = new Date(),
-  timeframe: string = '1Day',
 ): string {
-  const secondsPerBar = timeframeToSeconds(timeframe);
-  const lookbackMs = secondsPerBar * 1000 * (count * 2 + 5);
-  const start = new Date(now.getTime() - lookbackMs);
+  const start = new Date(now.getTime() - (count * 2 + 5) * DAY_MS);
   const params = new URLSearchParams({
-    timeframe,
+    timeframe: '1Day',
     feed: 'iex',
     sort: 'desc',
     limit: String(count),
@@ -54,16 +53,9 @@ export function mapBar(bar: AlpacaBar): Candle {
   };
 }
 
-export function createFetcher(): (
-  symbol: string,
-  count: number,
-  timeframe?: string,
-) => Promise<Candle[]> {
-  return async (
-    symbol: string,
-    count: number,
-    timeframe: string = '1Day',
-  ): Promise<Candle[]> => {
+@Injectable()
+export class AlpacaProvider implements DataProvider {
+  async getHistoricalData(symbol: string, count: number): Promise<Candle[]> {
     const keyId = process.env.ALPACA_API_KEY_ID;
     const secretKey = process.env.ALPACA_API_SECRET_KEY;
     if (!keyId || !secretKey) {
@@ -71,7 +63,7 @@ export function createFetcher(): (
     }
 
     const response = await axios.get<AlpacaBarsResponse>(
-      buildBarsUrl(symbol, count, new Date(), timeframe),
+      buildBarsUrl(symbol, count),
       {
         headers: {
           'APCA-API-KEY-ID': keyId,
@@ -83,13 +75,14 @@ export function createFetcher(): (
     const body: AlpacaBarsResponse = response.data;
 
     if (!body.bars || body.bars.length === 0) {
-      if (process.env.ALLOW_EMPTY_HISTORY === 'true') {
-        return [];
-      }
       throw new Error(`No market data returned for symbol ${symbol}`);
     }
 
     const bars = body.bars;
     return bars.map(mapBar).sort((a, b) => a.time - b.time);
-  };
+  }
+
+  getStreamData(symbol: string): Observable<Candle> {
+    throw new Error('Real-time streaming not implemented for alpaca provider');
+  }
 }
