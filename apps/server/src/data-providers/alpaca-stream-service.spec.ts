@@ -18,15 +18,15 @@ describe('AlpacaStreamService', () => {
     delete process.env.ALPACA_API_KEY_ID;
     delete process.env.ALPACA_API_SECRET_KEY;
     const service = new AlpacaStreamService();
-    expect(() => service.minuteBars('SPY')).toThrow('Alpaca API credentials are not configured');
+    expect(() => service.stream('SPY', '1Min')).toThrow('Alpaca API credentials are not configured');
   });
 
-  describe('minuteBars', () => {
+  describe('stream', () => {
     it('emits a mapped bar for the subscribed symbol', async () => {
       const fakeSocket = new FakeSocket();
       const service = new AlpacaStreamService(() => fakeSocket);
 
-      const obs = service.minuteBars('SPY');
+      const obs = service.stream('SPY', '1Min');
 
       fakeSocket.simulateOpen();
       fakeSocket.simulateAuthenticated();
@@ -61,7 +61,7 @@ describe('AlpacaStreamService', () => {
       const fakeSocket = new FakeSocket();
       const service = new AlpacaStreamService(() => fakeSocket);
 
-      const obs = service.minuteBars('SPY');
+      const obs = service.stream('SPY', '1Min');
 
       fakeSocket.simulateOpen();
       fakeSocket.simulateAuthenticated();
@@ -100,8 +100,8 @@ describe('AlpacaStreamService', () => {
     it('sends auth message on open', () => {
       const fakeSocket = new FakeSocket();
       const service = new AlpacaStreamService(() => fakeSocket);
-      // Call minuteBars to trigger connect()
-      service.minuteBars('SPY');
+      // Call stream to trigger connect()
+      service.stream('SPY', '1Min');
       fakeSocket.simulateOpen();
       expect(fakeSocket.sentMessages[0]).toBe(
         buildAuthMessage('test-key', 'test-secret'),
@@ -111,7 +111,7 @@ describe('AlpacaStreamService', () => {
     it('sends subscribe message on authenticated', () => {
       const fakeSocket = new FakeSocket();
       const service = new AlpacaStreamService(() => fakeSocket);
-      service.minuteBars('SPY');
+      service.stream('SPY', '1Min');
       fakeSocket.simulateOpen();
       fakeSocket.simulateAuthenticated();
       expect(fakeSocket.sentMessages[1]).toBe(
@@ -123,12 +123,12 @@ describe('AlpacaStreamService', () => {
       const fakeSocket = new FakeSocket();
       const service = new AlpacaStreamService(() => fakeSocket);
 
-      const obs1 = service.minuteBars('SPY');
+      const obs1 = service.stream('SPY', '1Min');
       fakeSocket.simulateOpen();
       fakeSocket.simulateAuthenticated();
 
       // Now subscribe to a second symbol - should reuse existing connection
-      const obs2 = service.minuteBars('AAPL');
+      const obs2 = service.stream('AAPL', '1Min');
       fakeSocket.simulateAuthenticated();
 
       // The last subscribe message should include both symbols

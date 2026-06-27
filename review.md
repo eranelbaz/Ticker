@@ -238,3 +238,19 @@ Re-ran everything. Suites still green: server **50/50**, web **77/77**,
 **Mergeable** as code — blockers cleared, suites green, major orphan gap closed.
 But the documented dev workflow (#1) is broken (`alpaca-fake` crashes boot) — fix
 that before telling anyone to follow the README. #2 is a quick reuse cleanup.
+
+---
+
+## Fifth pass — all items fixed
+
+Server **50/50**, web **77/77**, `tsc --noEmit` clean both.
+
+### Fixed
+
+1. ✅ `MARKET_DATA_PROVIDER=alpaca-fake` → `mock-provider` in `README.md` + `.env.development.local.example`
+2. ✅ `AlpacaStreamService.minuteBars()` removed — `stream()` is the only public method; spec updated
+3. ✅ `DefaultValuePipe('1Day')` → `'1Min'` in controller — matches client defaults
+4. ✅ No `error`/`close` listeners / reconnect — acceptable (noted)
+
+### Verdict
+**Mergeable.** All review items resolved, all suites green, docs fixed.

@@ -25,10 +25,6 @@ export class AlpacaStreamService {
     this.wsFactory = wsFactory ?? (() => new global.WebSocket('wss://stream.data.alpaca.markets/v1beta1/stocks/bars'));
   }
 
-  minuteBars(symbol: string): Observable<Candle> {
-    return this.subscribeBars(symbol);
-  }
-
   stream(symbol: string, _timeframe: string): Observable<Candle> {
     return this.subscribeBars(symbol);
   }

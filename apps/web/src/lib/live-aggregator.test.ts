@@ -1,4 +1,4 @@
-import { foldLiveBar } from './liveAggregator';
+import { foldLiveBar } from './live-aggregator';
 import type { Candle } from '@ticker/server';
 
 const c = (time: number, o: number, h: number, l: number, cl: number, v: number): Candle => ({

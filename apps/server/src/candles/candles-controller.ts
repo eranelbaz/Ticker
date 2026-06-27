@@ -56,7 +56,7 @@ export class CandlesController {
   async getHistoricalData(
     @Param('symbol') symbol: string,
     @Query('count', new DefaultValuePipe(300), ParseIntPipe) count: number,
-    @Query('timeframe', new DefaultValuePipe('1Day')) timeframe: string,
+    @Query('timeframe', new DefaultValuePipe('1Min')) timeframe: string,
   ): Promise<Candle[]> {
     if (count < MIN_COUNT || count > MAX_COUNT) {
       throw new BadRequestException(COUNT_ERROR_MSG);

@@ -24,7 +24,7 @@ US market data is only live during market hours. To develop the live chart
 any time, run against Alpaca's `FAKEPACA` test stream (synthetic data, 24/7):
 
 1. Copy `apps/web/.env.development.local.example` to `apps/web/.env.development.local`
-2. Set `MARKET_DATA_PROVIDER=alpaca-fake` in `apps/server/.env`
+2. Set `MARKET_DATA_PROVIDER=mock-provider` in `apps/server/.env`
 3. Run:
 
 ```bash
