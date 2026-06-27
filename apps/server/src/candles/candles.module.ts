@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DataProvider } from '../data-providers/providers/types';
 import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
 import { DATA_PROVIDER } from '../data-providers/providers';
