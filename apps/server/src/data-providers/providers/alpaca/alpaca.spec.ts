@@ -1,15 +1,17 @@
 import axios from 'axios';
 import { AlpacaProvider, buildBarsUrl, mapBar } from './index';
 
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-
 describe('AlpacaProvider', () => {
   let provider: AlpacaProvider;
+  let getSpy: jest.SpyInstance;
 
   beforeEach(() => {
     provider = new AlpacaProvider();
-    jest.clearAllMocks();
+    getSpy = jest.spyOn(axios, 'get');
+  });
+
+  afterEach(() => {
+    getSpy.mockRestore();
   });
 
   describe('getHistoricalData', () => {
@@ -20,7 +22,7 @@ describe('AlpacaProvider', () => {
       await expect(provider.getHistoricalData('AAPL', 5)).rejects.toThrow(
         'Alpaca API credentials are not configured',
       );
-      expect(mockedAxios.get).not.toHaveBeenCalled();
+      expect(getSpy).not.toHaveBeenCalled();
     });
 
     it('throws when API credentials are empty', async () => {
@@ -35,7 +37,7 @@ describe('AlpacaProvider', () => {
     it('throws when no bars returned', async () => {
       process.env.ALPACA_API_KEY_ID = 'test-key';
       process.env.ALPACA_API_SECRET_KEY = 'test-secret';
-      mockedAxios.get.mockResolvedValue({ data: { bars: null, next_page_token: null } });
+      getSpy.mockResolvedValue({ data: { bars: null, next_page_token: null } });
 
       await expect(provider.getHistoricalData('AAPL', 5)).rejects.toThrow(
         'No market data returned for symbol AAPL',
@@ -50,7 +52,7 @@ describe('AlpacaProvider', () => {
         { t: '2024-01-02T00:00:00Z', o: 148, h: 152, l: 146, c: 150, v: 90000 },
         { t: '2024-01-01T00:00:00Z', o: 145, h: 150, l: 144, c: 148, v: 80000 },
       ];
-      mockedAxios.get.mockResolvedValue({ data: { bars: mockBars, next_page_token: null } });
+      getSpy.mockResolvedValue({ data: { bars: mockBars, next_page_token: null } });
 
       const result = await provider.getHistoricalData('AAPL', 3);
 
@@ -62,7 +64,7 @@ describe('AlpacaProvider', () => {
       expect(result[0].low).toBe(144);
       expect(result[0].close).toBe(148);
       expect(result[0].volume).toBe(80000);
-      expect(mockedAxios.get).toHaveBeenCalledWith(
+      expect(getSpy).toHaveBeenCalledWith(
         expect.stringContaining('/v2/stocks/AAPL/bars'),
         expect.objectContaining({
           headers: {
@@ -77,7 +79,7 @@ describe('AlpacaProvider', () => {
     it('throws when bars array is empty', async () => {
       process.env.ALPACA_API_KEY_ID = 'test-key';
       process.env.ALPACA_API_SECRET_KEY = 'test-secret';
-      mockedAxios.get.mockResolvedValue({ data: { bars: [], next_page_token: null } });
+      getSpy.mockResolvedValue({ data: { bars: [], next_page_token: null } });
 
       await expect(provider.getHistoricalData('AAPL', 5)).rejects.toThrow(
         'No market data returned for symbol AAPL',
