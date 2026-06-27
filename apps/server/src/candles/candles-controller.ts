@@ -7,8 +7,8 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { Candle } from './candle.type';
-import { CandlesService } from './candles.service';
+import { Candle } from './candle-type';
+import { CandlesService } from './candles-service';
 
 export const MIN_COUNT = 1;
 export const MAX_COUNT = 1000;

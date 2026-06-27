@@ -1,11 +1,7 @@
 import { firstValueFrom } from 'rxjs';
-import { AlpacaStreamService } from './alpaca-stream.service';
+import { AlpacaStreamService } from './alpaca-stream-service';
 import { buildAuthMessage, buildSubscribeMessage, mapStreamBar } from './alpaca-stream-messages';
-<<<<<<< HEAD
-import { Candle } from '../candles/candle.interface';
-=======
-import { Candle } from '../candles/candle.type';
->>>>>>> origin/main
+import { Candle } from '../candles/candle-type';
 
 describe('AlpacaStreamService', () => {
   const originalEnv = process.env;
@@ -199,20 +195,11 @@ class FakeSocket {
   }
 
   simulateAuthenticated(): void {
-<<<<<<< HEAD
-    this._emit('message', [{ data: JSON.stringify([{ T: 'success', msg: 'authenticated' }]) }]);
-  }
-
-  simulateMessage(raw: string): void {
-    // Alpaca batches messages into a JSON array.
-    this._emit('message', [{ data: `[${raw}]` }]);
-=======
     this._emit('message', [{ data: JSON.stringify({ T: 'status', status: 'authenticated', message: 'authenticated' }) }]);
   }
 
   simulateMessage(raw: string): void {
     this._emit('message', [{ data: raw }]);
->>>>>>> origin/main
   }
 
   private _emit(type: string, args: any[]): void {

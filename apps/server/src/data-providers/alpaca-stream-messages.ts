@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { Candle } from '../candles/candle.interface';
-=======
-import { Candle } from '../candles/candle.type';
->>>>>>> origin/main
+import { Candle } from '../candles/candle-type';
 
 export type AlpacaStreamBar = {
   T: 'b';
