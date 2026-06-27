@@ -1,12 +1,11 @@
-import { CandlesController } from './candles.controller';
+import { CandlesController, COUNT_ERROR_MSG } from './candles.controller';
 import { CandlesService } from './candles.service';
 
 const symbol = 'SPY';
 const DEFAULT_SYMBOL = 'FAKE';
 const DEFAULT_TIMEFRAME = '1Min';
-const COUNT_ERROR_MSG = 'count must be between 1 and 1000';
 const MOCK_CONFIG = { defaultSymbol: DEFAULT_SYMBOL, defaultTimeframe: DEFAULT_TIMEFRAME };
-const ALPACA_CONFIG = { defaultSymbol: symbol, defaultTimeframe: DEFAULT_TIMEFRAME };
+const DEFAULT_CONFIG = { defaultSymbol: symbol, defaultTimeframe: DEFAULT_TIMEFRAME };
 const SAMPLE_CANDLE = { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 };
 
 describe('CandlesController', () => {
@@ -52,12 +51,12 @@ describe('CandlesController', () => {
 
     it('returns SPY as default symbol when alpaca', () => {
       process.env.MARKET_DATA_PROVIDER = 'alpaca';
-      expect(controller.getConfig()).toEqual(ALPACA_CONFIG);
+      expect(controller.getConfig()).toEqual(DEFAULT_CONFIG);
     });
 
     it('returns SPY as default symbol when unset', () => {
       delete process.env.MARKET_DATA_PROVIDER;
-      expect(controller.getConfig()).toEqual(ALPACA_CONFIG);
+      expect(controller.getConfig()).toEqual(DEFAULT_CONFIG);
     });
   });
 });

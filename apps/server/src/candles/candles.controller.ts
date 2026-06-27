@@ -10,8 +10,9 @@ import {
 import { Candle } from './candle.interface';
 import { CandlesService } from './candles.service';
 
-const MIN_COUNT = 1;
-const MAX_COUNT = 1000;
+export const MIN_COUNT = 1;
+export const MAX_COUNT = 1000;
+export const COUNT_ERROR_MSG = `count must be between ${MIN_COUNT} and ${MAX_COUNT}`;
 
 @Controller('candles')
 export class CandlesController {
@@ -24,9 +25,7 @@ export class CandlesController {
     @Query('timeframe', new DefaultValuePipe('1Day')) timeframe: string,
   ): Promise<Candle[]> {
     if (count < MIN_COUNT || count > MAX_COUNT) {
-      throw new BadRequestException(
-        `count must be between ${MIN_COUNT} and ${MAX_COUNT}`,
-      );
+      throw new BadRequestException(COUNT_ERROR_MSG);
     }
     return this.candlesService.getHistoricalData(symbol, count, timeframe);
   }
