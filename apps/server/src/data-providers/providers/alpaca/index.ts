@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { Candle } from '../candles/candle.type';
-import { DataProvider } from './types';
+import { Candle } from '../../candles/candle.type';
+import { DataProvider } from '../types';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 

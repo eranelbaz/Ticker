@@ -1,4 +1,4 @@
-import { MockProvider } from './mock-provider';
+import { MockProvider } from './mock-provider/index';
 
 describe('MockProvider', () => {
   let provider: MockProvider;

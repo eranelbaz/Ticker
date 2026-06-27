@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Candle } from '../../candles/candle.type';
-import { DataProvider } from './types';
+import { DataProvider } from '../types';
 
 const VALID_SECONDS: Record<string, number> = {
   Min: 60,
