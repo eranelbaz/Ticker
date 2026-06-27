@@ -3,10 +3,10 @@ import { CandlesController } from './candles.controller';
 
 describe('CandlesController', () => {
   let controller: CandlesController;
-  let service: { getCandles: jest.Mock };
+  let service: { getHistoricalData: jest.Mock };
 
   beforeEach(() => {
-    service = { getCandles: jest.fn() };
+    service = { getHistoricalData: jest.fn() };
     controller = new CandlesController(service);
   });
 
@@ -14,24 +14,24 @@ describe('CandlesController', () => {
     const candles = [
       { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
     ];
-    service.getCandles.mockResolvedValue(candles);
+    service.getHistoricalData.mockResolvedValue(candles);
 
-    await expect(controller.getCandles('SPY', 10, '1Day')).resolves.toEqual(candles);
-    expect(service.getCandles).toHaveBeenCalledWith('SPY', 10, '1Day');
+    await expect(controller.getHistoricalData('SPY', 10, '1Day')).resolves.toEqual(candles);
+    expect(service.getHistoricalData).toHaveBeenCalledWith('SPY', 10, '1Day');
   });
 
   it('rejects count above the maximum', async () => {
-    await expect(controller.getCandles('SPY', 5000)).rejects.toThrow(
+    await expect(controller.getHistoricalData('SPY', 5000)).rejects.toThrow(
       BadRequestException,
     );
-    expect(service.getCandles).not.toHaveBeenCalled();
+    expect(service.getHistoricalData).not.toHaveBeenCalled();
   });
 
   it('rejects count below the minimum', async () => {
-    await expect(controller.getCandles('SPY', -5)).rejects.toThrow(
+    await expect(controller.getHistoricalData('SPY', -5)).rejects.toThrow(
       BadRequestException,
     );
-    expect(service.getCandles).not.toHaveBeenCalled();
+    expect(service.getHistoricalData).not.toHaveBeenCalled();
   });
 
   it('returns default symbol SPY when provider is not mock-provider', () => {

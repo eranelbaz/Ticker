@@ -38,7 +38,7 @@ describe('CandlesService', () => {
     });
 
     const service = new CandlesService(new AlpacaProvider());
-    const candles = await service.getCandles('SPY', 2);
+    const candles = await service.getHistoricalData('SPY', 2);
 
     expect(candles).toHaveLength(2);
     expect(candles[0].time).toBeLessThan(candles[1].time);
@@ -53,7 +53,7 @@ describe('CandlesService', () => {
     });
 
     const service = new CandlesService(new AlpacaProvider());
-    await service.getCandles('SPY', 1);
+    await service.getHistoricalData('SPY', 1);
 
     const call = mockGetSpy.mock.calls.at(-1) as [string, Record<string, unknown>];
     expect(call?.[1]?.['headers']?.['APCA-API-KEY-ID']).toBe('test-key');
@@ -65,7 +65,7 @@ describe('CandlesService', () => {
     delete process.env.ALPACA_API_SECRET_KEY;
 
     const service = new CandlesService(new AlpacaProvider());
-    await expect(service.getCandles('SPY', 1)).rejects.toThrow(
+    await expect(service.getHistoricalData('SPY', 1)).rejects.toThrow(
       'Alpaca API credentials are not configured',
     );
   });
@@ -74,7 +74,7 @@ describe('CandlesService', () => {
     mockGetResolves({ bars: null, next_page_token: null });
 
     const service = new CandlesService(new AlpacaProvider());
-    await expect(service.getCandles('SPY', 1)).rejects.toThrow(
+    await expect(service.getHistoricalData('SPY', 1)).rejects.toThrow(
       'No market data returned for symbol SPY',
     );
   });
@@ -83,7 +83,7 @@ describe('CandlesService', () => {
     mockGetSpy.mockRejectedValue(new Error('boom'));
 
     const service = new CandlesService(new AlpacaProvider());
-    await expect(service.getCandles('SPY', 1)).rejects.toThrow('boom');
+    await expect(service.getHistoricalData('SPY', 1)).rejects.toThrow('boom');
   });
 
   it('streams live candles via MockProvider', () => {

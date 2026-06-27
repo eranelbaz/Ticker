@@ -18,7 +18,7 @@ export class CandlesController {
   constructor(private readonly candlesService: CandlesService) {}
 
   @Get(':symbol')
-  async getCandles(
+  async getHistoricalData(
     @Param('symbol') symbol: string,
     @Query('count', new DefaultValuePipe(300), ParseIntPipe) count: number,
     @Query('timeframe', new DefaultValuePipe('1Day')) timeframe: string,
@@ -28,7 +28,7 @@ export class CandlesController {
         `count must be between ${MIN_COUNT} and ${MAX_COUNT}`,
       );
     }
-    return this.candlesService.getCandles(symbol, count, timeframe);
+    return this.candlesService.getHistoricalData(symbol, count, timeframe);
   }
 
   @Get('config')
