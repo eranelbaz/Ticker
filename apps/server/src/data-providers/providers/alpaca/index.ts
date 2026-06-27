@@ -3,8 +3,6 @@ import axios from 'axios';
 import { Observable, Subject } from 'rxjs';
 import { Candle } from '../../../candles/candles.type';
 import { DataProvider } from '../types';
-import { AlpacaStreamBar } from './stream-bar.type';
-import { buildAuthMessage, buildSubscribeMessage, mapStreamBar } from './alpaca-stream-messages';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
@@ -45,6 +43,38 @@ export function buildBarsUrl(
 }
 
 export function mapBar(bar: AlpacaBar): Candle {
+  return {
+    time: Math.floor(Date.parse(bar.t) / 1000),
+    open: bar.o,
+    high: bar.h,
+    low: bar.l,
+    close: bar.c,
+    volume: bar.v,
+  };
+}
+
+export type AlpacaStreamBar = {
+  T: 'b';
+  S: string;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  v: number;
+  t: string;
+  n?: number;
+  vw?: number;
+};
+
+export function buildAuthMessage(key: string, secret: string): string {
+  return JSON.stringify({ action: 'auth', key, secret });
+}
+
+export function buildSubscribeMessage(symbols: string[]): string {
+  return JSON.stringify({ action: 'subscribe', bars: symbols });
+}
+
+export function mapStreamBar(bar: AlpacaStreamBar): Candle {
   return {
     time: Math.floor(Date.parse(bar.t) / 1000),
     open: bar.o,
