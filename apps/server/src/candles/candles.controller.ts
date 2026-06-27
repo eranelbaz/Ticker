@@ -7,7 +7,7 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { Candle } from './candle.interface';
+import { Candle } from './candle';
 import { CandlesService } from './candles.service';
 
 export const MIN_COUNT = 1;

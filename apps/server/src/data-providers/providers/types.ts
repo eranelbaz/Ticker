@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Candle } from '../candles/candle.interface';
+import { Candle } from '../candles/candle';
 
 export type DataProvider = {
   getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]>;
