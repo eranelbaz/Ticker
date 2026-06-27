@@ -2,8 +2,36 @@ import { Injectable } from '@nestjs/common';
 import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Candle } from '../../candles/candle.interface';
-import { timeframeToSeconds } from './timeframe';
 import { DataProvider } from './types';
+
+const VALID_SECONDS: Record<string, number> = {
+  Min: 60,
+  Hour: 3600,
+  Day: 86400,
+};
+
+const TIMEFRAME_RE = /^(\d+)(Min|Hour|Day|Sec)$/;
+
+function timeframeToSeconds(timeframe: string): number {
+  const match = TIMEFRAME_RE.exec(timeframe);
+  if (!match) {
+    throw new Error(`invalid timeframe: ${timeframe}`);
+  }
+
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+
+  if (unit === 'Sec') {
+    throw new Error('sub-minute timeframes are not supported');
+  }
+
+  const unitSeconds = VALID_SECONDS[unit];
+  if (unitSeconds === undefined) {
+    throw new Error(`invalid timeframe: ${timeframe}`);
+  }
+
+  return value * unitSeconds;
+}
 
 function generateFakeCandles(
   symbol: string,

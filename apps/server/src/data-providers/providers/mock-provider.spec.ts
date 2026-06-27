@@ -1,5 +1,4 @@
 import { MockProvider } from './mock-provider';
-import { timeframeToSeconds } from './timeframe';
 
 const FAKE_SYMBOL = 'FAKE';
 const OTHER_SYMBOL = 'SPY';
@@ -53,7 +52,7 @@ describe('MockProvider', () => {
     it('spaces candles by the requested timeframe', async () => {
       const candles = await provider.getHistoricalData(FAKE_SYMBOL, 3, '1Hour');
       const gap = candles[1].time - candles[0].time;
-      expect(gap).toBe(timeframeToSeconds('1Hour'));
+      expect(gap).toBe(3600);
     });
 
     it('uses the same base price for all symbols', async () => {
