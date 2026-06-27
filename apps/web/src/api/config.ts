@@ -3,7 +3,9 @@ export interface AppConfig {
   defaultTimeframe: string;
 }
 
+import axios from 'axios';
+
 export async function fetchConfig(): Promise<AppConfig> {
-  const res = await fetch('/api/candles/config');
-  return res.json();
+  const { data } = await axios.get<AppConfig>('/api/candles/config', { timeout: 10_000 });
+  return data;
 }
