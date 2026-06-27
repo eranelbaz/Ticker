@@ -9,6 +9,9 @@
   "exports": {
     ".": {
       "types": "./dist/api.d.ts",
+      "default": "./dist/api.d.ts"
+    }
+  },
       "default": "./dist/main.js"
     }
   },
