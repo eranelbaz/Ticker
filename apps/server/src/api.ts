@@ -1,6 +1,6 @@
 export type { Candle } from './candles/candle.interface';
 
-export interface AppConfig {
+export type AppConfig = {
   defaultSymbol: string;
   defaultTimeframe: string;
-}
+};
