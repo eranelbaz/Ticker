@@ -1,7 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { AlpacaStreamService } from './alpaca-stream.service';
 import { buildAuthMessage, buildSubscribeMessage, mapStreamBar } from './alpaca-stream-messages';
-import { Candle } from '../candles/candle.interface';
+import { Candle } from '../candles/candle.type';
 
 describe('AlpacaStreamService', () => {
   const originalEnv = process.env;

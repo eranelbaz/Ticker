@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
-import { Candle } from '../candles/candle.interface';
+import { Candle } from '../candles/candle.type';
 import { buildAuthMessage, buildSubscribeMessage, mapStreamBar } from './alpaca-stream-messages';
 
 /**
