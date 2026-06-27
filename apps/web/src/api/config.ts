@@ -1,8 +1,4 @@
-export interface AppConfig {
-  defaultSymbol: string;
-  defaultTimeframe: string;
-}
-
+import type { AppConfig } from '@ticker/server';
 import axios from 'axios';
 
 export async function fetchConfig(): Promise<AppConfig> {
