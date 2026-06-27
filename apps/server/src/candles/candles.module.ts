@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
-import { LiveCandlesService } from './live-candles.service';
 import { DATA_PROVIDER } from '../data-providers/providers';
 import { ProviderName } from '../data-providers/providers';
 import { AlpacaProvider, MockProvider } from '../data-providers/providers';
@@ -20,12 +19,11 @@ function getDataProvider(): DataProvider {
   controllers: [CandlesController],
   providers: [
     CandlesService,
-    LiveCandlesService,
     {
       provide: DATA_PROVIDER,
       useValue: getDataProvider(),
     },
   ],
-  exports: [CandlesController, LiveCandlesService],
+  exports: [CandlesController],
 })
 export class CandlesModule {}
