@@ -7,7 +7,7 @@ export async function fetchCandles(
   timeframe = '1Min',
 ): Promise<Candle[]> {
   const { data } = await axios.get<Candle[]>(
-    `/api/candles/${encodeURIComponent(symbol)}`,
+    `/api/candles/${encodeURIComponent(symbol)}/history`,
     { params: { count, timeframe }, timeout: 10_000 },
   );
   return data;

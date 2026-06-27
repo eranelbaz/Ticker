@@ -1,17 +1,5 @@
-import { Candle } from '../candles/candle-type';
-
-export type AlpacaStreamBar = {
-  T: 'b';
-  S: string;
-  o: number;
-  h: number;
-  l: number;
-  c: number;
-  v: number;
-  t: string;
-  n?: number;
-  vw?: number;
-};
+import { Candle } from '../../../candles/candles.type';
+import { AlpacaStreamBar } from './stream-bar.type';
 
 export function buildAuthMessage(key: string, secret: string): string {
   return JSON.stringify({ action: 'auth', key, secret });

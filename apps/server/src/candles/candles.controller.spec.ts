@@ -13,7 +13,6 @@ const SAMPLE_CANDLE = { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume:
 describe('CandlesController', () => {
   let controller: CandlesController;
   let service: CandlesService;
-  let liveService: { stream: jest.Mock };
 
   beforeEach(() => {
     service = {
@@ -22,12 +21,9 @@ describe('CandlesController', () => {
         getStreamData: jest.fn(),
       },
       getHistoricalData: jest.fn(),
+      stream: jest.fn().mockReturnValue(of([])),
     } as any;
-    liveService = { stream: jest.fn() };
-    controller = new CandlesController(
-      service as any,
-      liveService as any,
-    );
+    controller = new CandlesController(service as any);
   });
 
   describe('GET /candles/:symbol', () => {
@@ -72,18 +68,14 @@ describe('CandlesController', () => {
   });
 
   describe('stream (SSE)', () => {
-    it('delegates to the live candles service', () => {
-      liveService.stream.mockReturnValue(of([]));
+    it('delegates to the candles service', () => {
       (controller as any).stream('SPY');
-      // DefaultValuePipe doesn't apply in unit tests, so timeframe is undefined
-      expect(liveService.stream).toHaveBeenCalledWith('SPY', undefined);
+      expect(service.stream).toHaveBeenCalledWith('SPY', undefined);
     });
 
     it('passes through the timeframe query param', () => {
-      liveService.stream.mockReturnValue(of([]));
-      // stream(symbol, timeframe) — timeframe is the second argument
       (controller as any).stream('AAPL', '1Hour');
-      expect(liveService.stream).toHaveBeenCalledWith('AAPL', '1Hour');
+      expect(service.stream).toHaveBeenCalledWith('AAPL', '1Hour');
     });
 
     it('emits MessageEvent objects with candle data', () => {
@@ -95,7 +87,7 @@ describe('CandlesController', () => {
         close: 10.5,
         volume: 100,
       };
-      liveService.stream.mockReturnValue(of(mockCandle));
+      (service.stream as jest.Mock).mockReturnValue(of(mockCandle));
       const result = (controller as any).stream('SPY');
       expect(result).toBeDefined();
       expect(typeof (result as Observable<any>).subscribe).toBe(

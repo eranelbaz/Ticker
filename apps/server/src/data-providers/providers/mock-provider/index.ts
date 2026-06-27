@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Candle } from '../../../candles/candle-type';
+import { Candle } from '../../../candles/candles.type';
 import { DataProvider } from '../types';
 import { timeframeToSeconds } from '@ticker/shared';
 

@@ -1,4 +1,4 @@
-import { Candle } from './candle-type';
+import { Candle } from './candles.type';
 
 export class BarAggregator {
   private bucketTime: number | null = null;

@@ -19,7 +19,7 @@ describe('AlpacaProvider', () => {
       delete process.env.ALPACA_API_KEY_ID;
       delete process.env.ALPACA_API_SECRET_KEY;
 
-      await expect(provider.getHistoricalData('AAPL', 5)).rejects.toThrow(
+      await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
         'Alpaca API credentials are not configured',
       );
       expect(getSpy).not.toHaveBeenCalled();
@@ -29,7 +29,7 @@ describe('AlpacaProvider', () => {
       process.env.ALPACA_API_KEY_ID = '';
       process.env.ALPACA_API_SECRET_KEY = '';
 
-      await expect(provider.getHistoricalData('AAPL', 5)).rejects.toThrow(
+      await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
         'Alpaca API credentials are not configured',
       );
     });
@@ -39,7 +39,7 @@ describe('AlpacaProvider', () => {
       process.env.ALPACA_API_SECRET_KEY = 'test-secret';
       getSpy.mockResolvedValue({ data: { bars: null, next_page_token: null } });
 
-      await expect(provider.getHistoricalData('AAPL', 5)).rejects.toThrow(
+      await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
         'No market data returned for symbol AAPL',
       );
     });
@@ -54,7 +54,7 @@ describe('AlpacaProvider', () => {
       ];
       getSpy.mockResolvedValue({ data: { bars: mockBars, next_page_token: null } });
 
-      const result = await provider.getHistoricalData('AAPL', 3);
+      const result = await provider.getHistoricalData('AAPL', 3, '1Day');
 
       expect(result).toHaveLength(3);
       expect(result[0].time).toBeLessThan(result[1].time);
@@ -81,17 +81,24 @@ describe('AlpacaProvider', () => {
       process.env.ALPACA_API_SECRET_KEY = 'test-secret';
       getSpy.mockResolvedValue({ data: { bars: [], next_page_token: null } });
 
-      await expect(provider.getHistoricalData('AAPL', 5)).rejects.toThrow(
+      await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
         'No market data returned for symbol AAPL',
       );
     });
   });
 
   describe('getStreamData', () => {
-    it('throws with not implemented message', () => {
-      expect(() => provider.getStreamData('AAPL')).toThrow(
-        'Real-time streaming not implemented for alpaca provider',
-      );
+    it('throws when credentials are missing', () => {
+      delete process.env.ALPACA_API_KEY_ID;
+      delete process.env.ALPACA_API_SECRET_KEY;
+      expect(() => provider.getStreamData('AAPL')).toThrow('Alpaca API credentials are not configured');
+    });
+
+    it('returns an Observable when credentials are present', () => {
+      process.env.ALPACA_API_KEY_ID = 'test-key';
+      process.env.ALPACA_API_SECRET_KEY = 'test-secret';
+      const obs = provider.getStreamData('AAPL');
+      expect(typeof obs.subscribe).toBe('function');
     });
   });
 });
