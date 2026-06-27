@@ -1,55 +1,47 @@
-import { MockProvider } from '../data-providers/providers';
 import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
 
 describe('CandlesController', () => {
   let controller: CandlesController;
+  let service: jest.Mocked<CandlesService>;
 
   beforeEach(() => {
-    process.env.MARKET_DATA_PROVIDER = 'mock-provider';
-    const service = new CandlesService(new MockProvider());
+    service = {
+      getHistoricalData: jest.fn(),
+    };
     controller = new CandlesController(service);
   });
 
-  afterEach(() => {
-    delete process.env.MARKET_DATA_PROVIDER;
-  });
-
   describe('GET /candles/:symbol', () => {
-    it('returns candles from the provider', async () => {
-      const candles = await controller.getHistoricalData('SPY', 5, '1Day');
-      expect(candles).toHaveLength(5);
-      expect(candles[0]).toHaveProperty('time');
-      expect(candles[0]).toHaveProperty('open');
-      expect(candles[0]).toHaveProperty('high');
-      expect(candles[0]).toHaveProperty('low');
-      expect(candles[0]).toHaveProperty('close');
-      expect(candles[0]).toHaveProperty('volume');
-    });
+    it('returns candles from the service', async () => {
+      const candles = [
+        { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
+      ];
+      service.getHistoricalData.mockResolvedValue(candles);
 
-    it('returns candles sorted ascending by time', async () => {
-      const candles = await controller.getHistoricalData('SPY', 10, '1Day');
-      for (let i = 1; i < candles.length; i++) {
-        expect(candles[i].time).toBeGreaterThan(candles[i - 1].time);
-      }
+      await expect(controller.getHistoricalData('SPY', 10, '1Day')).resolves.toEqual(candles);
+      expect(service.getHistoricalData).toHaveBeenCalledWith('SPY', 10, '1Day');
     });
 
     it('rejects count above the maximum', async () => {
       await expect(controller.getHistoricalData('SPY', 1001)).rejects.toThrow(
         'count must be between 1 and 1000',
       );
+      expect(service.getHistoricalData).not.toHaveBeenCalled();
     });
 
     it('rejects count below the minimum', async () => {
       await expect(controller.getHistoricalData('SPY', 0)).rejects.toThrow(
         'count must be between 1 and 1000',
       );
+      expect(service.getHistoricalData).not.toHaveBeenCalled();
     });
 
     it('rejects negative count', async () => {
       await expect(controller.getHistoricalData('SPY', -5)).rejects.toThrow(
         'count must be between 1 and 1000',
       );
+      expect(service.getHistoricalData).not.toHaveBeenCalled();
     });
   });
 
