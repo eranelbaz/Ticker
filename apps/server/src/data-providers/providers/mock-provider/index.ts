@@ -3,35 +3,7 @@ import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Candle } from '../../../candles/candle-type';
 import { DataProvider } from '../types';
-
-const VALID_SECONDS: Record<string, number> = {
-  Min: 60,
-  Hour: 3600,
-  Day: 86400,
-};
-
-const TIMEFRAME_RE = /^(\d+)(Min|Hour|Day|Sec)$/;
-
-function timeframeToSeconds(timeframe: string): number {
-  const match = TIMEFRAME_RE.exec(timeframe);
-  if (!match) {
-    throw new Error(`invalid timeframe: ${timeframe}`);
-  }
-
-  const value = parseInt(match[1], 10);
-  const unit = match[2];
-
-  if (unit === 'Sec') {
-    throw new Error('sub-minute timeframes are not supported');
-  }
-
-  const unitSeconds = VALID_SECONDS[unit];
-  if (unitSeconds === undefined) {
-    throw new Error(`invalid timeframe: ${timeframe}`);
-  }
-
-  return value * unitSeconds;
-}
+import { timeframeToSeconds } from '@ticker/shared';
 
 function generateFakeCandles(
   symbol: string,
@@ -43,6 +15,9 @@ function generateFakeCandles(
 
   let basePrice = 100;
   const intervalSeconds = timeframeToSeconds(timeframe);
+  if (intervalSeconds < 60) {
+    throw new Error('sub-minute timeframes are not supported');
+  }
   const nowSeconds = Math.floor(now.getTime() / 1000);
 
   for (let i = count; i > 0; i--) {

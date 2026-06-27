@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 import { Candle } from '../candles/candle-type';
-import { buildAuthMessage, buildSubscribeMessage, mapStreamBar } from './alpaca-stream-messages';
+import { AlpacaStreamBar, buildAuthMessage, buildSubscribeMessage, mapStreamBar } from './alpaca-stream-messages';
 
-/**
- * Minimal WebSocket contract for dependency injection.
- */
 export interface WebSocketLike {
   send(data: string): void;
   close(): void;
-  addEventListener(type: string, listener: (...args: any[]) => void): void;
-  removeEventListener(type: string, listener: (...args: any[]) => void): void;
+  readyState?: number;
+  addEventListener(type: string, listener: (event: { data: string }) => void): void;
+  removeEventListener(type: string, listener: (event: { data: string }) => void): void;
 }
 
 export type WebSocketFactory = () => WebSocketLike;
@@ -18,8 +16,6 @@ export type WebSocketFactory = () => WebSocketLike;
 @Injectable()
 export class AlpacaStreamService {
   private ws: WebSocketLike | null = null;
-  private connected = false;
-  private authenticated = false;
   private readonly symbols = new Set<string>();
   private readonly barSubjects = new Map<string, Subject<Candle>>();
 
@@ -29,18 +25,21 @@ export class AlpacaStreamService {
     this.wsFactory = wsFactory ?? (() => new global.WebSocket('wss://stream.data.alpaca.markets/v1beta1/stocks/bars'));
   }
 
-  /**
-   * Returns an Observable of 1-minute bars for the given symbol.
-   * The WebSocket connection is lazily established on the first call.
-   */
   minuteBars(symbol: string): Observable<Candle> {
+    return this.subscribeBars(symbol);
+  }
+
+  stream(symbol: string, _timeframe: string): Observable<Candle> {
+    return this.subscribeBars(symbol);
+  }
+
+  private subscribeBars(symbol: string): Observable<Candle> {
     const keyId = process.env.ALPACA_API_KEY_ID;
     const secretKey = process.env.ALPACA_API_SECRET_KEY;
     if (!keyId || !secretKey) {
       throw new Error('Alpaca API credentials are not configured');
     }
 
-    // Return existing subject if already subscribed
     if (this.barSubjects.has(symbol)) {
       return this.barSubjects.get(symbol)!.asObservable();
     }
@@ -51,6 +50,8 @@ export class AlpacaStreamService {
 
     if (!this.ws) {
       this.connect(keyId, secretKey);
+    } else if (this.ws.readyState !== undefined && this.ws.readyState === 1) {
+      this.ws.send(buildSubscribeMessage([symbol]));
     }
 
     return subject.asObservable();
@@ -60,29 +61,24 @@ export class AlpacaStreamService {
     this.ws = this.wsFactory();
 
     this.ws.addEventListener('open', () => {
-      this.connected = true;
-      // Send auth
       this.ws!.send(buildAuthMessage(keyId, secretKey));
     });
 
     this.ws.addEventListener('message', (event: { data: string }) => {
-      let msg: { T?: string; status?: string; message?: string; t?: string; S?: string; o?: number; h?: number; l?: number; c?: number; v?: number };
+      let msg: AlpacaStreamBar | Record<string, unknown>;
       try {
         msg = JSON.parse(event.data);
       } catch {
         return;
       }
 
-      // Handle authentication response
-      if (msg.T === 'status' && msg.status === 'authenticated') {
-        this.authenticated = true;
+      if ((msg as Record<string, unknown>).T === 'status' && (msg as Record<string, string>).status === 'authenticated') {
         this.onAuthenticated();
       }
 
-      // Handle bar data
-      if (msg.T === 'b' && msg.S && msg.o != null && msg.h != null && msg.l != null && msg.c != null && msg.v != null && msg.t) {
-        const candle = mapStreamBar(msg as any);
-        const subject = this.barSubjects.get(msg.S);
+      if (msg && typeof msg === 'object' && 'T' in msg && msg.T === 'b' && 'S' in msg && msg.S && 'o' in msg && 'h' in msg && 'l' in msg && 'c' in msg && 'v' in msg && 't' in msg) {
+        const candle = mapStreamBar(msg as AlpacaStreamBar);
+        const subject = this.barSubjects.get(msg.S as string);
         if (subject) {
           subject.next(candle);
         }
@@ -91,7 +87,6 @@ export class AlpacaStreamService {
   }
 
   private onAuthenticated(): void {
-    // Subscribe to all collected symbols
     const symbols = Array.from(this.symbols);
     if (symbols.length > 0) {
       this.ws!.send(buildSubscribeMessage(symbols));

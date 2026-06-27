@@ -4,7 +4,7 @@ import type { Candle } from '@ticker/server';
 export async function fetchCandles(
   symbol: string,
   count: number,
-  timeframe = '1Day',
+  timeframe = '1Min',
 ): Promise<Candle[]> {
   const { data } = await axios.get<Candle[]>(
     `/api/candles/${encodeURIComponent(symbol)}`,

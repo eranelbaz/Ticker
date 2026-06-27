@@ -1,6 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
-import { MessageEvent } from 'stream';
 import { CandlesController, COUNT_ERROR_MSG } from './candles-controller';
 import { CandlesService } from './candles-service';
 
@@ -13,13 +12,17 @@ const SAMPLE_CANDLE = { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume:
 
 describe('CandlesController', () => {
   let controller: CandlesController;
-  let service: jest.Mocked<CandlesService>;
+  let service: CandlesService;
   let liveService: { stream: jest.Mock };
 
   beforeEach(() => {
     service = {
+      provider: {
+        getHistoricalData: jest.fn(),
+        getStreamData: jest.fn(),
+      },
       getHistoricalData: jest.fn(),
-    };
+    } as any;
     liveService = { stream: jest.fn() };
     controller = new CandlesController(
       service as any,
@@ -29,24 +32,24 @@ describe('CandlesController', () => {
 
   describe('GET /candles/:symbol', () => {
     it('returns candles from the service', async () => {
-      service.getHistoricalData.mockResolvedValue([SAMPLE_CANDLE]);
+      (service.getHistoricalData as jest.Mock).mockResolvedValue([SAMPLE_CANDLE]);
 
       await expect(controller.getHistoricalData(symbol, 10, '1Day')).resolves.toEqual([SAMPLE_CANDLE]);
       expect(service.getHistoricalData).toHaveBeenCalledWith(symbol, 10, '1Day');
     });
 
     it('rejects count above the maximum', async () => {
-      await expect(controller.getHistoricalData(symbol, 1001)).rejects.toThrow(COUNT_ERROR_MSG);
+      await expect(controller.getHistoricalData(symbol, 1001, '1Day')).rejects.toThrow(COUNT_ERROR_MSG);
       expect(service.getHistoricalData).not.toHaveBeenCalled();
     });
 
     it('rejects count below the minimum', async () => {
-      await expect(controller.getHistoricalData(symbol, 0)).rejects.toThrow(COUNT_ERROR_MSG);
+      await expect(controller.getHistoricalData(symbol, 0, '1Day')).rejects.toThrow(COUNT_ERROR_MSG);
       expect(service.getHistoricalData).not.toHaveBeenCalled();
     });
 
     it('rejects negative count', async () => {
-      await expect(controller.getHistoricalData(symbol, -5)).rejects.toThrow(COUNT_ERROR_MSG);
+      await expect(controller.getHistoricalData(symbol, -5, '1Day')).rejects.toThrow(COUNT_ERROR_MSG);
       expect(service.getHistoricalData).not.toHaveBeenCalled();
     });
   });
@@ -95,7 +98,7 @@ describe('CandlesController', () => {
       liveService.stream.mockReturnValue(of(mockCandle));
       const result = (controller as any).stream('SPY');
       expect(result).toBeDefined();
-      expect(typeof (result as Observable<MessageEvent>).subscribe).toBe(
+      expect(typeof (result as Observable<any>).subscribe).toBe(
         'function',
       );
     });

@@ -10,6 +10,8 @@ module.exports = {
     '/\\.pnpm/(?!(msw|@mswjs|rettime|until-async|is-node-process|outvariant|headers-polyfill|strict-event-emitter|@open-draft|cookie|lightweight-charts)[@+])',
   ],
   moduleNameMapper: {
+    '^@ticker/shared$':
+      '<rootDir>/../../packages/shared/src/index.ts',
     '^lightweight-charts$':
       '<rootDir>/node_modules/lightweight-charts/dist/lightweight-charts.production.mjs',
   },
