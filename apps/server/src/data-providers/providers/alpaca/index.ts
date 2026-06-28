@@ -13,24 +13,27 @@ export class AlpacaProvider implements DataProvider {
   private readonly symbols = new Set<string>();
   private readonly barSubjects = new Map<string, Subject<Candle>>();
   private readonly wsFactory: WebSocketFactory;
+  private readonly keyId: string;
+  private readonly secretKey: string;
 
   constructor(wsFactory?: WebSocketFactory) {
-    this.wsFactory = wsFactory ?? (() => new global.WebSocket('wss://stream.data.alpaca.markets/v1beta1/stocks/bars'));
-  }
-
-  async getHistoricalData(symbol: string, count: number, _timeframe: string): Promise<Candle[]> {
     const keyId = process.env.ALPACA_API_KEY_ID;
     const secretKey = process.env.ALPACA_API_SECRET_KEY;
     if (!keyId || !secretKey) {
       throw new Error('Alpaca API credentials are not configured');
     }
+    this.keyId = keyId;
+    this.secretKey = secretKey;
+    this.wsFactory = wsFactory ?? (() => new global.WebSocket('wss://stream.data.alpaca.markets/v1beta1/stocks/bars'));
+  }
 
+  async getHistoricalData(symbol: string, count: number, _timeframe: string): Promise<Candle[]> {
     const response = await axios.get<AlpacaBarsResponse>(
       buildBarsUrl(symbol, count),
       {
         headers: {
-          'APCA-API-KEY-ID': keyId,
-          'APCA-API-SECRET-KEY': secretKey,
+          'APCA-API-KEY-ID': this.keyId,
+          'APCA-API-SECRET-KEY': this.secretKey,
         },
         timeout: 10_000,
       },
@@ -46,12 +49,6 @@ export class AlpacaProvider implements DataProvider {
   }
 
   getStreamData(symbol: string): Observable<Candle> {
-    const keyId = process.env.ALPACA_API_KEY_ID;
-    const secretKey = process.env.ALPACA_API_SECRET_KEY;
-    if (!keyId || !secretKey) {
-      throw new Error('Alpaca API credentials are not configured');
-    }
-
     if (this.barSubjects.has(symbol)) {
       return this.barSubjects.get(symbol)!.asObservable();
     }
@@ -61,7 +58,7 @@ export class AlpacaProvider implements DataProvider {
     this.symbols.add(symbol);
 
     if (!this.ws) {
-      this.connect(keyId, secretKey);
+      this.connect(this.keyId, this.secretKey);
     } else if (this.ws.readyState !== undefined && this.ws.readyState === 1) {
       this.ws.send(buildSubscribeMessage([symbol]));
     }

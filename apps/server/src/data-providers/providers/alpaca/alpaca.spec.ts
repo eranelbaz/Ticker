@@ -8,37 +8,34 @@ describe('AlpacaProvider', () => {
   let getSpy: jest.SpyInstance;
 
   beforeEach(() => {
+    process.env.ALPACA_API_KEY_ID = 'test-key';
+    process.env.ALPACA_API_SECRET_KEY = 'test-secret';
     provider = new AlpacaProvider();
     getSpy = jest.spyOn(axios, 'get');
   });
 
   afterEach(() => {
     getSpy.mockRestore();
+    delete process.env.ALPACA_API_KEY_ID;
+    delete process.env.ALPACA_API_SECRET_KEY;
+  });
+
+  describe('constructor', () => {
+    it('throws when API credentials are missing', () => {
+      delete process.env.ALPACA_API_KEY_ID;
+      delete process.env.ALPACA_API_SECRET_KEY;
+      expect(() => new AlpacaProvider()).toThrow('Alpaca API credentials are not configured');
+    });
+
+    it('throws when API credentials are empty', () => {
+      process.env.ALPACA_API_KEY_ID = '';
+      process.env.ALPACA_API_SECRET_KEY = '';
+      expect(() => new AlpacaProvider()).toThrow('Alpaca API credentials are not configured');
+    });
   });
 
   describe('getHistoricalData', () => {
-    it('throws when API credentials are missing', async () => {
-      delete process.env.ALPACA_API_KEY_ID;
-      delete process.env.ALPACA_API_SECRET_KEY;
-
-      await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
-        'Alpaca API credentials are not configured',
-      );
-      expect(getSpy).not.toHaveBeenCalled();
-    });
-
-    it('throws when API credentials are empty', async () => {
-      process.env.ALPACA_API_KEY_ID = '';
-      process.env.ALPACA_API_SECRET_KEY = '';
-
-      await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
-        'Alpaca API credentials are not configured',
-      );
-    });
-
     it('throws when no bars returned', async () => {
-      process.env.ALPACA_API_KEY_ID = 'test-key';
-      process.env.ALPACA_API_SECRET_KEY = 'test-secret';
       getSpy.mockResolvedValue({ data: { bars: null, next_page_token: null } });
 
       await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
@@ -47,8 +44,6 @@ describe('AlpacaProvider', () => {
     });
 
     it('maps bars and returns sorted candles', async () => {
-      process.env.ALPACA_API_KEY_ID = 'test-key';
-      process.env.ALPACA_API_SECRET_KEY = 'test-secret';
       const mockBars = [
         { t: '2024-01-03T00:00:00Z', o: 150, h: 155, l: 148, c: 153, v: 100000 },
         { t: '2024-01-02T00:00:00Z', o: 148, h: 152, l: 146, c: 150, v: 90000 },
@@ -79,8 +74,6 @@ describe('AlpacaProvider', () => {
     });
 
     it('throws when bars array is empty', async () => {
-      process.env.ALPACA_API_KEY_ID = 'test-key';
-      process.env.ALPACA_API_SECRET_KEY = 'test-secret';
       getSpy.mockResolvedValue({ data: { bars: [], next_page_token: null } });
 
       await expect(provider.getHistoricalData('AAPL', 5, '1Day')).rejects.toThrow(
@@ -90,15 +83,7 @@ describe('AlpacaProvider', () => {
   });
 
   describe('getStreamData', () => {
-    it('throws when credentials are missing', () => {
-      delete process.env.ALPACA_API_KEY_ID;
-      delete process.env.ALPACA_API_SECRET_KEY;
-      expect(() => provider.getStreamData('AAPL')).toThrow('Alpaca API credentials are not configured');
-    });
-
-    it('returns an Observable when credentials are present', () => {
-      process.env.ALPACA_API_KEY_ID = 'test-key';
-      process.env.ALPACA_API_SECRET_KEY = 'test-secret';
+    it('returns an Observable', () => {
       const obs = provider.getStreamData('AAPL');
       expect(typeof obs.subscribe).toBe('function');
     });
@@ -251,13 +236,6 @@ describe('AlpacaProvider streaming', () => {
 
   afterAll(() => {
     process.env = originalEnv;
-  });
-
-  it('throws when credentials are missing', () => {
-    delete process.env.ALPACA_API_KEY_ID;
-    delete process.env.ALPACA_API_SECRET_KEY;
-    const service = new AlpacaProvider();
-    expect(() => service.getStreamData('SPY')).toThrow('Alpaca API credentials are not configured');
   });
 
   it('emits a mapped bar for the subscribed symbol', async () => {
