@@ -10,7 +10,7 @@ export class MockProvider implements DataProvider {
   private readonly streams = new Map<string, Observable<Candle>>();
 
   getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]> {
-    return Promise.resolve(generateFakeCandles(symbol, count, timeframe));
+    return Promise.resolve(generateFakeCandles(count, timeframe));
   }
 
   getStreamData(symbol: string): Observable<Candle> {

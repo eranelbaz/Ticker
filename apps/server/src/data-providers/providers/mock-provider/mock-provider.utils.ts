@@ -25,12 +25,8 @@ export function generateNextCandle(basePrice: number, time: number): { candle: C
   };
 }
 
-export function generateFakeCandles(symbol: string, count: number, timeframe: string = '1Day'): Candle[] {
+export function generateFakeCandles(count: number, timeframe: string = '1Day'): Candle[] {
   const intervalSeconds = timeframeToSeconds(timeframe);
-  if (intervalSeconds < 60) {
-    throw new Error('sub-minute timeframes are not supported');
-  }
-
   const nowSeconds = Math.floor(new Date().getTime() / 1000);
   const candles: Candle[] = [];
   let basePrice = 100;
