@@ -10,6 +10,7 @@ vite.config.*.timestamp-*
 .env
 .env.*
 !.env.example
+!.env.*.example
 .DS_Store
 
 # local planning docs — never committed

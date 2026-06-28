@@ -1,4 +1,4 @@
-export type { Candle } from './candles/candle.type';
+export type { Candle } from './candles/candles.type';
 
 export type AppConfig = {
   defaultSymbol: string;

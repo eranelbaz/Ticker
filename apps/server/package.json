@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "nest start --watch",
-    "build": "nest build && cp src/api.d.ts dist/api.d.ts",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "start:debug": "nest start --debug --watch",
@@ -29,12 +29,14 @@
     "@nestjs/common": "11.1.26",
     "@nestjs/core": "11.1.26",
     "@nestjs/platform-express": "11.1.26",
+    "@ticker/shared": "workspace:*",
     "axios": "1.17.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.15.1",
     "dotenv": "17.4.2",
     "reflect-metadata": "0.2.2",
-    "rxjs": "7.8.2"
+    "rxjs": "7.8.2",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.5",
@@ -69,6 +71,9 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^@ticker/shared$": "<rootDir>/../../../packages/shared/src/index.ts"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

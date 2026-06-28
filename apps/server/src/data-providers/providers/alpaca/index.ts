@@ -1,73 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { Observable } from 'rxjs';
-import { Candle } from '../../../candles/candle.type';
+import { Observable, Subject } from 'rxjs';
+import { Candle } from '../../../candles/candles.type';
 import { DataProvider } from '../types';
-
-export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
-
-const DAY_MS = 86_400_000;
-
-export type AlpacaBar = {
-  t: string; // RFC3339 timestamp
-  o: number;
-  h: number;
-  l: number;
-  c: number;
-  v: number;
-  n?: number;
-  vw?: number;
-};
-
-export type AlpacaBarsResponse = {
-  bars: AlpacaBar[] | null;
-  symbol?: string;
-  next_page_token: string | null;
-};
-
-export function buildBarsUrl(
-  symbol: string,
-  count: number,
-  now: Date = new Date(),
-): string {
-  const start = new Date(now.getTime() - (count * 2 + 5) * DAY_MS);
-  const params = new URLSearchParams({
-    timeframe: '1Day',
-    feed: 'iex',
-    sort: 'desc',
-    limit: String(count),
-    start: start.toISOString(),
-    end: now.toISOString(),
-  });
-  return `${ALPACA_DATA_BASE_URL}/v2/stocks/${symbol}/bars?${params.toString()}`;
-}
-
-export function mapBar(bar: AlpacaBar): Candle {
-  return {
-    time: Math.floor(Date.parse(bar.t) / 1000),
-    open: bar.o,
-    high: bar.h,
-    low: bar.l,
-    close: bar.c,
-    volume: bar.v,
-  };
-}
+import type { AlpacaBarsResponse, WebSocketFactory, WebSocketLike } from './alpaca.types';
+import { alpacaAuthenticatedSchema, alpacaStreamBarSchema } from './alpaca.schema';
+import { buildAuthMessage, buildBarsUrl, buildSubscribeMessage, mapBar, mapStreamBar } from './alpaca.utils';
 
 @Injectable()
 export class AlpacaProvider implements DataProvider {
-  async getHistoricalData(symbol: string, count: number): Promise<Candle[]> {
+  private ws: WebSocketLike | null = null;
+  private readonly symbols = new Set<string>();
+  private readonly barSubjects = new Map<string, Subject<Candle>>();
+  private readonly wsFactory: WebSocketFactory;
+  private readonly keyId: string;
+  private readonly secretKey: string;
+
+  constructor(wsFactory?: WebSocketFactory) {
     const keyId = process.env.ALPACA_API_KEY_ID;
     const secretKey = process.env.ALPACA_API_SECRET_KEY;
     if (!keyId || !secretKey) {
       throw new Error('Alpaca API credentials are not configured');
     }
+    this.keyId = keyId;
+    this.secretKey = secretKey;
+    this.wsFactory = wsFactory ?? (() => new global.WebSocket('wss://stream.data.alpaca.markets/v1beta1/stocks/bars'));
+  }
 
+  async getHistoricalData(symbol: string, count: number, _timeframe: string): Promise<Candle[]> {
     const response = await axios.get<AlpacaBarsResponse>(
       buildBarsUrl(symbol, count),
       {
         headers: {
-          'APCA-API-KEY-ID': keyId,
-          'APCA-API-SECRET-KEY': secretKey,
+          'APCA-API-KEY-ID': this.keyId,
+          'APCA-API-SECRET-KEY': this.secretKey,
         },
         timeout: 10_000,
       },
@@ -83,6 +49,56 @@ export class AlpacaProvider implements DataProvider {
   }
 
   getStreamData(symbol: string): Observable<Candle> {
-    throw new Error('Real-time streaming not implemented for alpaca provider');
+    if (this.barSubjects.has(symbol)) {
+      return this.barSubjects.get(symbol)!.asObservable();
+    }
+
+    const subject = new Subject<Candle>();
+    this.barSubjects.set(symbol, subject);
+    this.symbols.add(symbol);
+
+    if (!this.ws) {
+      this.connect(this.keyId, this.secretKey);
+    } else if (this.ws.readyState !== undefined && this.ws.readyState === 1) {
+      this.ws.send(buildSubscribeMessage([symbol]));
+    }
+
+    return subject.asObservable();
+  }
+
+  private connect(keyId: string, secretKey: string): void {
+    this.ws = this.wsFactory();
+
+    this.ws.addEventListener('open', () => {
+      this.ws!.send(buildAuthMessage(keyId, secretKey));
+    });
+
+    this.ws.addEventListener('message', (event: { data: string }) => {
+      let raw: unknown;
+      try {
+        raw = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+
+      if (alpacaAuthenticatedSchema.safeParse(raw).success) {
+        this.onAuthenticated();
+      }
+
+      const result = alpacaStreamBarSchema.safeParse(raw);
+      if (result.success) {
+        const subject = this.barSubjects.get(result.data.S);
+        if (subject) {
+          subject.next(mapStreamBar(result.data));
+        }
+      }
+    });
+  }
+
+  private onAuthenticated(): void {
+    const symbols = Array.from(this.symbols);
+    if (symbols.length > 0) {
+      this.ws!.send(buildSubscribeMessage(symbols));
+    }
   }
 }

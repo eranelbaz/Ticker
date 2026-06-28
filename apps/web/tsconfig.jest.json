@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.test.json",
+  "compilerOptions": {
+    "paths": {
+      "@ticker/server": ["../server/src/api.ts"],
+      "@ticker/shared": ["../../packages/shared/src/index.ts"]
+    }
+  }
+}
