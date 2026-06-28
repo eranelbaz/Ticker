@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "nest start --watch",
-    "build": "nest build && cp src/api.d.ts dist/api.d.ts",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "start:debug": "nest start --debug --watch",

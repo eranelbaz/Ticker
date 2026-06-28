@@ -12,6 +12,8 @@ module.exports = {
   moduleNameMapper: {
     '^@ticker/shared$':
       '<rootDir>/../../packages/shared/src/index.ts',
+    '^@ticker/server$':
+      '<rootDir>/../server/src/api.ts',
     '^lightweight-charts$':
       '<rootDir>/node_modules/lightweight-charts/dist/lightweight-charts.production.mjs',
   },

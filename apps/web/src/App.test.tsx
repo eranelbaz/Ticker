@@ -90,7 +90,7 @@ describe('App', () => {
       http.get('*/api/candles/config', () =>
         HttpResponse.json({ defaultSymbol: 'SPY', defaultTimeframe: '1Min' }),
       ),
-      http.get('*/api/candles/:symbol', () =>
+      http.get('*/api/candles/:symbol/history', () =>
         HttpResponse.json([
           { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
         ]),
@@ -107,7 +107,7 @@ describe('App', () => {
       http.get('*/api/candles/config', () =>
         HttpResponse.json({ defaultSymbol: 'SPY', defaultTimeframe: '1Min' }),
       ),
-      http.get('*/api/candles/:symbol', () =>
+      http.get('*/api/candles/:symbol/history', () =>
         HttpResponse.json(null, { status: 500 }),
       ),
     );
@@ -126,7 +126,7 @@ describe('App', () => {
       http.get('*/api/candles/config', () =>
         HttpResponse.json({ defaultSymbol: 'SPY', defaultTimeframe: '1Min' }),
       ),
-      http.get('*/api/candles/:symbol', () =>
+      http.get('*/api/candles/:symbol/history', () =>
         HttpResponse.json([
           { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 100 },
         ]),

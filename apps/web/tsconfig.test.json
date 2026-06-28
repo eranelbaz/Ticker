@@ -2,6 +2,10 @@
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "composite": true,
+    "paths": {
+      "@ticker/server": ["../server/src/api.ts"],
+      "@ticker/shared": ["../../packages/shared/src/index.ts"]
+    },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
     "module": "CommonJS",
     "moduleResolution": "bundler",
