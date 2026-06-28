@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { fetchCandles } from './api/candles';
 import { fetchConfig } from './api/config';
 import { CandlestickChart } from './components/CandlestickChart';
+import { TopBar } from './components/TopBar';
 import type { Candle } from '@ticker/server';
 import type { DrawingTool } from './drawings/types';
 import { DrawingToolbar } from './components/DrawingToolbar';
 import { useLiveCandles } from './hooks/useLiveCandles';
+import { computeQuote } from './utils/computeQuote';
 
 const DEFAULT_COUNT = 300;
 const DEFAULT_TIMEFRAME = '1Min';
@@ -59,15 +61,24 @@ export default function App() {
     );
   }
 
+  const quote = computeQuote(candles, liveCandle);
+
   return (
-    <div className="fixed inset-0 flex bg-chart-bg text-chart-text">
-      <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
-      <CandlestickChart
-        candles={candles}
-        liveCandle={liveCandle}
-        activeTool={activeTool}
-        onToolDeselect={() => setActiveTool(null)}
+    <div className="fixed inset-0 flex flex-col bg-chart-bg text-chart-text">
+      <TopBar
+        symbol={configSymbol ?? ''}
+        quote={quote}
+        isLive={liveCandle !== null}
       />
+      <div className="flex min-h-0 flex-1">
+        <DrawingToolbar activeTool={activeTool} onToolSelect={onToolSelect} />
+        <CandlestickChart
+          candles={candles}
+          liveCandle={liveCandle}
+          activeTool={activeTool}
+          onToolDeselect={() => setActiveTool(null)}
+        />
+      </div>
     </div>
   );
 }

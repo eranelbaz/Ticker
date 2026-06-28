@@ -82,6 +82,12 @@ jest.mock('./components/DrawingToolbar', () => ({
   ),
 }));
 
+jest.mock('./components/TopBar', () => ({
+  TopBar: ({ symbol }: { symbol: string; quote?: unknown; isLive?: boolean }) => (
+    <div data-testid="top-bar">{symbol}</div>
+  ),
+}));
+
 import App from './App';
 
 describe('App', () => {
@@ -150,5 +156,22 @@ describe('App', () => {
     expect(updateCandleCalls).toHaveLength(2);
 
     expect(updateCandleCalls.every((c) => c.time === 1000)).toBe(true);
+  });
+
+  it('shows the configured symbol in the top bar', async () => {
+    server.use(
+      http.get('*/api/candles/config', () =>
+        HttpResponse.json({ defaultSymbol: 'SPY', defaultTimeframe: '1Min' }),
+      ),
+      http.get('*/api/candles/:symbol/history', () =>
+        HttpResponse.json([
+          { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
+        ]),
+      ),
+    );
+
+    render(<App />);
+    expect(await screen.findByTestId('top-bar')).toBeInTheDocument();
+    expect(await screen.findByText('SPY')).toBeInTheDocument();
   });
 });
