@@ -3,7 +3,7 @@ module.exports = {
   transform: {
     '^.+\\.(tsx?|mjs|js)$': [
       'ts-jest',
-      { tsconfig: '<rootDir>/tsconfig.test.json' },
+      { tsconfig: '<rootDir>/tsconfig.jest.json' },
     ],
   },
   transformIgnorePatterns: [
