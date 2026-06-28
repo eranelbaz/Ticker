@@ -3,18 +3,9 @@ import axios from 'axios';
 import { Observable, Subject } from 'rxjs';
 import { Candle } from '../../../candles/candles.type';
 import { DataProvider } from '../types';
-import {
-  ALPACA_DATA_BASE_URL,
-  AlpacaBarsResponse,
-  WebSocketFactory,
-  WebSocketLike,
-  alpacaStreamBarSchema,
-  buildAuthMessage,
-  buildBarsUrl,
-  buildSubscribeMessage,
-  mapBar,
-  mapStreamBar,
-} from './alpaca.types';
+import { AlpacaBarsResponse, WebSocketFactory, WebSocketLike } from './alpaca.types';
+import { alpacaStreamBarSchema } from './alpaca.schema';
+import { buildAuthMessage, buildBarsUrl, buildSubscribeMessage, mapBar, mapStreamBar } from './alpaca.utils';
 
 @Injectable()
 export class AlpacaProvider implements DataProvider {
