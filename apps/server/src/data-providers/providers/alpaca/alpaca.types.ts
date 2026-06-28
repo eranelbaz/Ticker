@@ -1,13 +1,6 @@
-export type AlpacaBar = {
-  t: string;
-  o: number;
-  h: number;
-  l: number;
-  c: number;
-  v: number;
-  n?: number;
-  vw?: number;
-};
+import { AlpacaBar } from './alpaca.schema';
+
+export type { AlpacaBar };
 
 export type AlpacaBarsResponse = {
   bars: AlpacaBar[] | null;

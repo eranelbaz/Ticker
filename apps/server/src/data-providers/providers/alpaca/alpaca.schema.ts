@@ -1,21 +1,26 @@
 import { z } from 'zod';
 
-export const alpacaAuthenticatedSchema = z.object({
-  T: z.literal('status'),
-  status: z.literal('authenticated'),
-});
-
-export const alpacaStreamBarSchema = z.object({
-  T: z.literal('b'),
-  S: z.string(),
+export const alpacaBarSchema = z.object({
+  t: z.string(),
   o: z.number(),
   h: z.number(),
   l: z.number(),
   c: z.number(),
   v: z.number(),
-  t: z.string(),
   n: z.number().optional(),
   vw: z.number().optional(),
 });
 
+export type AlpacaBar = z.infer<typeof alpacaBarSchema>;
+
+export const alpacaStreamBarSchema = alpacaBarSchema.extend({
+  T: z.literal('b'),
+  S: z.string(),
+});
+
 export type AlpacaStreamBar = z.infer<typeof alpacaStreamBarSchema>;
+
+export const alpacaAuthenticatedSchema = z.object({
+  T: z.literal('status'),
+  status: z.literal('authenticated'),
+});
