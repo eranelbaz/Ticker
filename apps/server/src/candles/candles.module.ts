@@ -25,6 +25,5 @@ function getDataProvider(): DataProvider {
       useValue: getDataProvider(),
     },
   ],
-  exports: [CandlesController],
 })
 export class CandlesModule {}

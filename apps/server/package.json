@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "node --conditions=development --watch -r ts-node/register/transpile-only src/main.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
