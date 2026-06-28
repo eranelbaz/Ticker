@@ -11,14 +11,10 @@ export const alpacaBarSchema = z.object({
   vw: z.number().optional(),
 });
 
-export type AlpacaBar = z.infer<typeof alpacaBarSchema>;
-
 export const alpacaStreamBarSchema = alpacaBarSchema.extend({
   T: z.literal('b'),
   S: z.string(),
 });
-
-export type AlpacaStreamBar = z.infer<typeof alpacaStreamBarSchema>;
 
 export const alpacaAuthenticatedSchema = z.object({
   T: z.literal('status'),

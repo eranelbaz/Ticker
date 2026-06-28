@@ -1,5 +1,5 @@
 import { Candle } from '../../../candles/candles.type';
-import { AlpacaBar, AlpacaStreamBar } from './alpaca.schema';
+import { AlpacaBar, AlpacaStreamBar } from './alpaca.types';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
