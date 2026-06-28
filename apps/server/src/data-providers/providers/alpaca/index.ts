@@ -4,7 +4,7 @@ import { Observable, Subject } from 'rxjs';
 import { Candle } from '../../../candles/candles.type';
 import { DataProvider } from '../types';
 import { AlpacaBarsResponse, WebSocketFactory, WebSocketLike } from './alpaca.types';
-import { alpacaStreamBarSchema } from './alpaca.schema';
+import { alpacaAuthenticatedSchema, alpacaStreamBarSchema } from './alpaca.schema';
 import { buildAuthMessage, buildBarsUrl, buildSubscribeMessage, mapBar, mapStreamBar } from './alpaca.utils';
 
 @Injectable()
@@ -81,7 +81,7 @@ export class AlpacaProvider implements DataProvider {
         return;
       }
 
-      if (typeof raw === 'object' && raw !== null && (raw as Record<string, unknown>).T === 'status' && (raw as Record<string, unknown>).status === 'authenticated') {
+      if (alpacaAuthenticatedSchema.safeParse(raw).success) {
         this.onAuthenticated();
       }
 

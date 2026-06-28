@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export const alpacaAuthenticatedSchema = z.object({
+  T: z.literal('status'),
+  status: z.literal('authenticated'),
+});
+
 export const alpacaStreamBarSchema = z.object({
   T: z.literal('b'),
   S: z.string(),
