@@ -3,97 +3,18 @@ import axios from 'axios';
 import { Observable, Subject } from 'rxjs';
 import { Candle } from '../../../candles/candles.type';
 import { DataProvider } from '../types';
-
-export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
-
-const DAY_MS = 86_400_000;
-
-export type AlpacaBar = {
-  t: string; // RFC3339 timestamp
-  o: number;
-  h: number;
-  l: number;
-  c: number;
-  v: number;
-  n?: number;
-  vw?: number;
-};
-
-export type AlpacaBarsResponse = {
-  bars: AlpacaBar[] | null;
-  symbol?: string;
-  next_page_token: string | null;
-};
-
-export function buildBarsUrl(
-  symbol: string,
-  count: number,
-  now: Date = new Date(),
-): string {
-  const start = new Date(now.getTime() - (count * 2 + 5) * DAY_MS);
-  const params = new URLSearchParams({
-    timeframe: '1Day',
-    feed: 'iex',
-    sort: 'desc',
-    limit: String(count),
-    start: start.toISOString(),
-    end: now.toISOString(),
-  });
-  return `${ALPACA_DATA_BASE_URL}/v2/stocks/${symbol}/bars?${params.toString()}`;
-}
-
-export function mapBar(bar: AlpacaBar): Candle {
-  return {
-    time: Math.floor(Date.parse(bar.t) / 1000),
-    open: bar.o,
-    high: bar.h,
-    low: bar.l,
-    close: bar.c,
-    volume: bar.v,
-  };
-}
-
-export type AlpacaStreamBar = {
-  T: 'b';
-  S: string;
-  o: number;
-  h: number;
-  l: number;
-  c: number;
-  v: number;
-  t: string;
-  n?: number;
-  vw?: number;
-};
-
-export function buildAuthMessage(key: string, secret: string): string {
-  return JSON.stringify({ action: 'auth', key, secret });
-}
-
-export function buildSubscribeMessage(symbols: string[]): string {
-  return JSON.stringify({ action: 'subscribe', bars: symbols });
-}
-
-export function mapStreamBar(bar: AlpacaStreamBar): Candle {
-  return {
-    time: Math.floor(Date.parse(bar.t) / 1000),
-    open: bar.o,
-    high: bar.h,
-    low: bar.l,
-    close: bar.c,
-    volume: bar.v,
-  };
-}
-
-export interface WebSocketLike {
-  send(data: string): void;
-  close(): void;
-  readyState?: number;
-  addEventListener(type: string, listener: (event: { data: string }) => void): void;
-  removeEventListener(type: string, listener: (event: { data: string }) => void): void;
-}
-
-export type WebSocketFactory = () => WebSocketLike;
+import {
+  ALPACA_DATA_BASE_URL,
+  AlpacaBarsResponse,
+  WebSocketFactory,
+  WebSocketLike,
+  alpacaStreamBarSchema,
+  buildAuthMessage,
+  buildBarsUrl,
+  buildSubscribeMessage,
+  mapBar,
+  mapStreamBar,
+} from './alpaca.types';
 
 @Injectable()
 export class AlpacaProvider implements DataProvider {
@@ -165,22 +86,22 @@ export class AlpacaProvider implements DataProvider {
     });
 
     this.ws.addEventListener('message', (event: { data: string }) => {
-      let msg: AlpacaStreamBar | Record<string, unknown>;
+      let raw: unknown;
       try {
-        msg = JSON.parse(event.data);
+        raw = JSON.parse(event.data);
       } catch {
         return;
       }
 
-      if ((msg as Record<string, unknown>).T === 'status' && (msg as Record<string, string>).status === 'authenticated') {
+      if (typeof raw === 'object' && raw !== null && (raw as Record<string, unknown>).T === 'status' && (raw as Record<string, unknown>).status === 'authenticated') {
         this.onAuthenticated();
       }
 
-      if (msg && typeof msg === 'object' && 'T' in msg && msg.T === 'b' && 'S' in msg && msg.S && 'o' in msg && 'h' in msg && 'l' in msg && 'c' in msg && 'v' in msg && 't' in msg) {
-        const candle = mapStreamBar(msg as AlpacaStreamBar);
-        const subject = this.barSubjects.get(msg.S as string);
+      const result = alpacaStreamBarSchema.safeParse(raw);
+      if (result.success) {
+        const subject = this.barSubjects.get(result.data.S);
         if (subject) {
-          subject.next(candle);
+          subject.next(mapStreamBar(result.data));
         }
       }
     });

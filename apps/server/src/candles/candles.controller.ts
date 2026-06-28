@@ -13,7 +13,7 @@ import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { Candle } from './candles.type';
 import { CandlesService } from './candles.service';
-import { historyCountSchema, HISTORY_COUNT_MIN, HISTORY_COUNT_MAX } from './history-count.schema';
+import { historyCountSchema, HISTORY_COUNT_MIN, HISTORY_COUNT_MAX } from './candles.schema';
 
 export const COUNT_ERROR_MSG = `count must be between ${HISTORY_COUNT_MIN} and ${HISTORY_COUNT_MAX}`;
 

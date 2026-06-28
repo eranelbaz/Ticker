@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { AlpacaProvider, buildAuthMessage, buildBarsUrl, buildSubscribeMessage, mapBar, mapStreamBar } from './index';
+import { buildAuthMessage, buildBarsUrl, buildSubscribeMessage, mapBar, mapStreamBar } from './alpaca.types';
+import { AlpacaProvider } from './index';
 
 describe('AlpacaProvider', () => {
   let provider: AlpacaProvider;
