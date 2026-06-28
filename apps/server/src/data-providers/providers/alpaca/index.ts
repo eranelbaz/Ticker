@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Observable, Subject } from 'rxjs';
 import { Candle } from '../../../candles/candles.type';
 import { DataProvider } from '../types';
-import { AlpacaBarsResponse, WebSocketFactory, WebSocketLike } from './alpaca.types';
+import type { AlpacaBarsResponse, WebSocketFactory, WebSocketLike } from './alpaca.types';
 import { alpacaAuthenticatedSchema, alpacaStreamBarSchema } from './alpaca.schema';
 import { buildAuthMessage, buildBarsUrl, buildSubscribeMessage, mapBar, mapStreamBar } from './alpaca.utils';
 
