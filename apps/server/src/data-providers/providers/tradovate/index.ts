@@ -86,6 +86,169 @@ export class TradovateProvider implements DataProvider {
   }
 
   getStreamData(symbol: string): Observable<Candle> {
-    throw new Error('not implemented');
+    if (this.barSubjects.has(symbol)) {
+      return this.barSubjects.get(symbol)!.asObservable();
+    }
+    const subject = new Subject<Candle>();
+    this.barSubjects.set(symbol, subject);
+    void this.ensureReady().catch((err) => subject.error(err as Error));
+    return subject.asObservable();
+  }
+
+  private ensureReady(): Promise<void> {
+    if (!this.ready) {
+      this.ready = this.connect();
+      this.ready.catch(() => {
+        this.ready = null;
+        this.stopHeartbeat();
+      });
+    }
+    return this.ready;
+  }
+
+  private async connect(): Promise<void> {
+    const token = await this.getToken();
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error('Tradovate connection timed out before authorization')),
+        CONNECT_TIMEOUT_MS,
+      );
+      timer.unref?.();
+      const onReady = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      const onError = (err: Error) => {
+        clearTimeout(timer);
+        reject(err);
+      };
+      this.ws = this.wsFactory();
+      this.ws.addEventListener('message', (event: { data: string }) => {
+        this.handleFrame(event.data, token, onReady, onError);
+      });
+      this.ws.addEventListener('close', () => this.stopHeartbeat());
+      this.ws.addEventListener('error', () => onError(new Error('Tradovate socket error')));
+    });
+  }
+
+  private async getToken(): Promise<string> {
+    const response = await axios.post(
+      `${authBaseUrl(this.env)}/auth/accesstokenrequest`,
+      {
+        name: this.creds.name,
+        password: this.creds.password,
+        appId: this.creds.appId,
+        appVersion: this.creds.appVersion,
+        cid: this.creds.cid,
+        sec: this.creds.sec,
+        ...(this.creds.deviceId ? { deviceId: this.creds.deviceId } : {}),
+      },
+      { timeout: 10_000 },
+    );
+    const data = tradovateAccessTokenResponseSchema.parse(response.data);
+    const throttle = throttleError(data, 'authentication');
+    if (throttle) {
+      throw throttle;
+    }
+    if (data.errorText) {
+      throw new Error(`Tradovate authentication failed: ${data.errorText}`);
+    }
+    const value = data.mdAccessToken ?? data.accessToken;
+    if (!value) {
+      throw new Error('Tradovate authentication failed: no access token returned');
+    }
+    return value;
+  }
+
+  private handleFrame(
+    raw: string,
+    token: string,
+    onReady: () => void,
+    onReadyError: (err: Error) => void,
+  ): void {
+    const [type, items] = prepareFrame(raw);
+    if (type === 'o') {
+      this.ws!.send(buildAuthFrame(token));
+      this.startHeartbeat();
+      return;
+    }
+    if (type === 'c') {
+      this.stopHeartbeat();
+      return;
+    }
+    if (type !== 'a') {
+      return;
+    }
+    for (const item of items) {
+      const response = tradovateResponseItemSchema.safeParse(item);
+      if (response.success) {
+        const { i, s, d } = response.data;
+        if (i === 0) {
+          if (s === 200) {
+            onReady();
+          } else {
+            onReadyError(new Error('Tradovate authorization failed'));
+          }
+          continue;
+        }
+        const pending = this.pending.get(i);
+        if (pending) {
+          this.pending.delete(i);
+          if (s === 200) {
+            pending.resolve(d);
+          } else {
+            pending.reject(new Error(`Tradovate request ${i} failed with status ${s}`));
+          }
+        }
+        continue;
+      }
+      const chart = tradovateChartEventSchema.safeParse(item);
+      if (chart.success) {
+        this.handleChart(chart.data.d.charts);
+      }
+    }
+  }
+
+  private handleChart(charts: TradovateChartPacket[]): void {
+    void charts;
+  }
+
+  private send(endpoint: string, body: unknown): Promise<unknown> {
+    return new Promise((resolve, reject) => {
+      const id = this.requestId++;
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`Tradovate request ${id} (${endpoint}) timed out`));
+      }, REQUEST_TIMEOUT_MS);
+      timer.unref?.();
+      this.pending.set(id, {
+        resolve: (data) => {
+          clearTimeout(timer);
+          resolve(data);
+        },
+        reject: (err) => {
+          clearTimeout(timer);
+          reject(err);
+        },
+      });
+      this.ws!.send(buildRequestFrame(endpoint, id, body));
+    });
+  }
+
+  private startHeartbeat(): void {
+    if (this.heartbeatTimer) {
+      return;
+    }
+    this.heartbeatTimer = setInterval(() => {
+      this.ws?.send('[]');
+    }, HEARTBEAT_INTERVAL_MS);
+    this.heartbeatTimer.unref?.();
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
   }
 }

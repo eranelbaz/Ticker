@@ -77,3 +77,40 @@ describe('TradovateProvider constructor', () => {
     expect(() => new TradovateProvider(() => new FakeSocket())).not.toThrow();
   });
 });
+
+describe('TradovateProvider connect + authorize', () => {
+  const originalEnv = process.env;
+  let postSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, ...CREDS_ENV, TRADOVATE_ENV: 'demo' };
+    postSpy = jest.spyOn(axios, 'post').mockResolvedValue({
+      data: { mdAccessToken: 'md-token', expirationTime: FUTURE_ISO },
+    });
+  });
+
+  afterEach(() => {
+    postSpy.mockRestore();
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  it('requests a token from the demo auth URL then sends the authorize frame on open', async () => {
+    const fake = new FakeSocket();
+    const provider = new TradovateProvider(() => fake);
+
+    void provider.getStreamData('MESU6');
+    await flush();
+
+    expect(postSpy).toHaveBeenCalledWith(
+      'https://demo.tradovateapi.com/v1/auth/accesstokenrequest',
+      expect.objectContaining({ name: 'user', cid: 8, sec: 'secret', deviceId: 'device-1' }),
+      expect.objectContaining({ timeout: 10_000 }),
+    );
+
+    fake.simulateOpen();
+    expect(fake.sentMessages[0]).toBe('authorize\n0\n\n"md-token"');
+  });
+});
