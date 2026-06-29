@@ -25,7 +25,7 @@ export default function App() {
       .then((config) => {
         setConfigSymbol(config.defaultSymbol);
         if (!cancelled) {
-          return fetchCandles(config.defaultSymbol, DEFAULT_COUNT);
+          return fetchCandles(config.defaultSymbol, DEFAULT_COUNT, DEFAULT_TIMEFRAME);
         }
       })
       .then((data) => {
