@@ -1,5 +1,5 @@
 import { classNameMerge } from '../utils/classNameMerge';
-import type { Quote } from '../utils/computeQuote';
+import type { Quote } from '../utils/compute-quote';
 
 const priceFormat = new Intl.NumberFormat('en-US', {
   style: 'currency',

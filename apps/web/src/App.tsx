@@ -7,7 +7,7 @@ import type { Candle } from '@ticker/server';
 import type { DrawingTool } from './drawings/types';
 import { DrawingToolbar } from './components/DrawingToolbar';
 import { useLiveCandles } from './hooks/useLiveCandles';
-import { computeQuote } from './utils/computeQuote';
+import { computeQuote } from './utils/compute-quote';
 
 const DEFAULT_COUNT = 300;
 const DEFAULT_TIMEFRAME = '1Min';
