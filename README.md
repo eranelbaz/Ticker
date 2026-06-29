@@ -36,3 +36,18 @@ The browser subscribes to `FAKEPACA` via the configured `VITE_SYMBOL` / `VITE_TI
 
 Real `ALPACA_API_KEY_ID` / `ALPACA_API_SECRET_KEY` are still required in
 `apps/server/.env` if you switch back to real data (`MARKET_DATA_PROVIDER=alpaca`).
+
+## Tradovate (futures)
+
+To use Tradovate as the data provider (e.g. for E-mini / Micro futures like
+`MESU6`), set `MARKET_DATA_PROVIDER=tradovate` in `apps/server/.env` and provide
+your credentials:
+
+- `TRADOVATE_USERNAME`, `TRADOVATE_PASSWORD` — your account login.
+- `TRADOVATE_CID`, `TRADOVATE_SECRET` — API key pair (request API access from Tradovate).
+- `TRADOVATE_DEVICE_ID` — *optional* stable UUID; reduces captcha challenges but auth works without it.
+- `TRADOVATE_ENV` — `demo` (default) or `live`. Only the REST auth URL differs;
+  the market-data WebSocket (`wss://md.tradovateapi.com/v1/websocket`) is shared.
+
+Live real-time data requires an active market-data subscription on your Tradovate
+account. Tradovate symbols are specific contract months (e.g. `MESU6`), not roots.
