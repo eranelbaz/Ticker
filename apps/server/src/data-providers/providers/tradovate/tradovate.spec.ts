@@ -8,7 +8,8 @@ const FUTURE_ISO = '2099-01-01T00:00:00Z';
 
 class FakeSocket {
   sentMessages: string[] = [];
-  private listeners: Map<string, Set<(event: { data: string }) => void>> = new Map();
+  private listeners: Map<string, Set<(event: { data: string }) => void>> =
+    new Map();
 
   send(data: string): void {
     this.sentMessages.push(data);
@@ -16,14 +17,20 @@ class FakeSocket {
 
   close(): void {}
 
-  addEventListener(type: string, listener: (event: { data: string }) => void): void {
+  addEventListener(
+    type: string,
+    listener: (event: { data: string }) => void,
+  ): void {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
     this.listeners.get(type)!.add(listener);
   }
 
-  removeEventListener(type: string, listener: (event: { data: string }) => void): void {
+  removeEventListener(
+    type: string,
+    listener: (event: { data: string }) => void,
+  ): void {
     this.listeners.get(type)?.delete(listener);
   }
 
@@ -70,7 +77,9 @@ describe('TradovateProvider constructor', () => {
   it('throws when credentials are missing', () => {
     process.env = { ...originalEnv };
     delete process.env.TRADOVATE_USERNAME;
-    expect(() => new TradovateProvider()).toThrow('Tradovate API credentials are not configured');
+    expect(() => new TradovateProvider()).toThrow(
+      'Tradovate API credentials are not configured',
+    );
   });
 
   it('constructs when all required credentials are present', () => {
@@ -106,7 +115,12 @@ describe('TradovateProvider connect + authorize', () => {
 
     expect(postSpy).toHaveBeenCalledWith(
       'https://demo.tradovateapi.com/v1/auth/accesstokenrequest',
-      expect.objectContaining({ name: 'user', cid: 8, sec: 'secret', deviceId: 'device-1' }),
+      expect.objectContaining({
+        name: 'user',
+        cid: 8,
+        sec: 'secret',
+        deviceId: 'device-1',
+      }),
       expect.objectContaining({ timeout: 10_000 }),
     );
 
@@ -154,13 +168,21 @@ describe('TradovateProvider getHistoricalData', () => {
     fake.simulateAuthorized();
     await flush();
 
-    expect(fake.sentMessages.some((m) => m.startsWith('md/getChart'))).toBe(true);
+    expect(fake.sentMessages.some((m) => m.startsWith('md/getChart'))).toBe(
+      true,
+    );
 
     fake.simulateResponse(1, { historicalId: 10, realtimeId: 11 });
     await flush();
 
     fake.simulateChart([
-      { id: 10, bars: [bar('2024-01-02T00:00:00Z', 200), bar('2024-01-01T00:00:00Z', 100)] },
+      {
+        id: 10,
+        bars: [
+          bar('2024-01-02T00:00:00Z', 200),
+          bar('2024-01-01T00:00:00Z', 100),
+        ],
+      },
     ]);
     fake.simulateChart([{ id: 10, eoh: true }]);
 
@@ -171,7 +193,9 @@ describe('TradovateProvider getHistoricalData', () => {
     expect(candles[1].close).toBe(200);
     expect(candles[0].time).toBeLessThan(candles[1].time);
     expect(candles[0].volume).toBe(15);
-    expect(fake.sentMessages.some((m) => m.startsWith('md/cancelChart'))).toBe(true);
+    expect(fake.sentMessages.some((m) => m.startsWith('md/cancelChart'))).toBe(
+      true,
+    );
   });
 
   it('throws when history is empty', async () => {
@@ -187,6 +211,74 @@ describe('TradovateProvider getHistoricalData', () => {
     await flush();
     fake.simulateChart([{ id: 10, eoh: true }]);
 
-    await expect(promise).rejects.toThrow('No market data returned for symbol MESU6');
+    await expect(promise).rejects.toThrow(
+      'No market data returned for symbol MESU6',
+    );
+  });
+});
+
+describe('TradovateProvider getStreamData', () => {
+  const originalEnv = process.env;
+  let postSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, ...CREDS_ENV };
+    postSpy = jest.spyOn(axios, 'post').mockResolvedValue({
+      data: { mdAccessToken: 'md-token', expirationTime: FUTURE_ISO },
+    });
+  });
+
+  afterEach(() => {
+    postSpy.mockRestore();
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  const liveBar = (timestamp: string, close: number) => ({
+    timestamp,
+    open: close,
+    high: close + 1,
+    low: close - 1,
+    close,
+    upVolume: 3,
+    downVolume: 2,
+  });
+
+  it('returns an Observable', () => {
+    const provider = new TradovateProvider(() => new FakeSocket());
+    expect(typeof provider.getStreamData('MESU6').subscribe).toBe('function');
+  });
+
+  it('emits bars for the subscribed symbol on its subscription id', async () => {
+    const fake = new FakeSocket();
+    const provider = new TradovateProvider(() => fake);
+
+    const obs = provider.getStreamData('MESU6');
+    await flush();
+    fake.simulateOpen();
+    fake.simulateAuthorized();
+    await flush();
+
+    fake.simulateResponse(1, { historicalId: 20, realtimeId: 21 });
+    await flush();
+
+    const next = firstValueFrom(obs);
+
+    fake.simulateChart([
+      { id: 21, bars: [liveBar('2024-01-01T00:01:00Z', 150)] },
+    ]);
+
+    const candle = await next;
+    expect(candle.close).toBe(150);
+    expect(candle.volume).toBe(5);
+  });
+
+  it('reuses the same subject for repeat subscriptions to one symbol', () => {
+    const provider = new TradovateProvider(() => new FakeSocket());
+    const a = provider.getStreamData('MESU6');
+    const b = provider.getStreamData('MESU6');
+    expect(a).toBe(b);
   });
 });

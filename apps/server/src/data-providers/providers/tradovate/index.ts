@@ -55,6 +55,7 @@ export class TradovateProvider implements DataProvider {
   private readonly pending = new Map<number, PendingRequest>();
   private readonly chartHandlers = new Map<number, ChartSubscription>();
   private readonly barSubjects = new Map<string, Subject<Candle>>();
+  private readonly barObservables = new Map<string, Observable<Candle>>();
 
   private readonly creds: TradovateCredentials;
   private readonly env: TradovateEnv;
@@ -78,12 +79,21 @@ export class TradovateProvider implements DataProvider {
       appVersion: process.env.TRADOVATE_APP_VERSION || '1.0',
     };
     this.env = process.env.TRADOVATE_ENV === 'live' ? 'live' : 'demo';
-    this.wsFactory = wsFactory ?? (() => new global.WebSocket(TRADOVATE_MD_WS_URL));
+    this.wsFactory =
+      wsFactory ?? (() => new global.WebSocket(TRADOVATE_MD_WS_URL));
   }
 
-  async getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]> {
+  async getHistoricalData(
+    symbol: string,
+    count: number,
+    timeframe: string,
+  ): Promise<Candle[]> {
     await this.ensureReady();
-    const { ids, realtimeId } = await this.requestChart(symbol, count, timeframe);
+    const { ids, realtimeId } = await this.requestChart(
+      symbol,
+      count,
+      timeframe,
+    );
     const bars: Candle[] = [];
     try {
       await new Promise<void>((resolve, reject) => {
@@ -103,7 +113,9 @@ export class TradovateProvider implements DataProvider {
         });
       });
     } finally {
-      void this.send('md/cancelChart', { subscriptionId: realtimeId }).catch(() => undefined);
+      void this.send('md/cancelChart', { subscriptionId: realtimeId }).catch(
+        () => undefined,
+      );
     }
     if (bars.length === 0) {
       throw new Error(`No market data returned for symbol ${symbol}`);
@@ -116,7 +128,10 @@ export class TradovateProvider implements DataProvider {
     count: number,
     timeframe: string,
   ): Promise<{ ids: number[]; realtimeId: number }> {
-    const raw = await this.send('md/getChart', buildGetChartBody({ symbol, count, timeframe }));
+    const raw = await this.send(
+      'md/getChart',
+      buildGetChartBody({ symbol, count, timeframe }),
+    );
     const throttle = tradovateThrottleSchema.safeParse(raw);
     if (throttle.success) {
       const err = throttleError(throttle.data, 'md/getChart');
@@ -126,10 +141,12 @@ export class TradovateProvider implements DataProvider {
     }
     const parsed = tradovateGetChartResultSchema.safeParse(raw);
     const realtimeId = parsed.success
-      ? parsed.data.realtimeId ?? parsed.data.subscriptionId
+      ? (parsed.data.realtimeId ?? parsed.data.subscriptionId)
       : undefined;
     if (!parsed.success || realtimeId === undefined) {
-      throw new Error(`Tradovate md/getChart returned an unexpected response: ${JSON.stringify(raw)}`);
+      throw new Error(
+        `Tradovate md/getChart returned an unexpected response: ${JSON.stringify(raw)}`,
+      );
     }
     const ids = [parsed.data.historicalId, realtimeId].filter(
       (id): id is number => id !== undefined,
@@ -138,13 +155,30 @@ export class TradovateProvider implements DataProvider {
   }
 
   getStreamData(symbol: string): Observable<Candle> {
-    if (this.barSubjects.has(symbol)) {
-      return this.barSubjects.get(symbol)!.asObservable();
+    const existing = this.barObservables.get(symbol);
+    if (existing) {
+      return existing;
     }
     const subject = new Subject<Candle>();
     this.barSubjects.set(symbol, subject);
-    void this.ensureReady().catch((err) => subject.error(err as Error));
-    return subject.asObservable();
+    const observable = subject.asObservable();
+    this.barObservables.set(symbol, observable);
+    void this.startStream(symbol, subject).catch((err) =>
+      subject.error(err as Error),
+    );
+    return observable;
+  }
+
+  private async startStream(
+    symbol: string,
+    subject: Subject<Candle>,
+  ): Promise<void> {
+    await this.ensureReady();
+    const { ids } = await this.requestChart(symbol, 1, STREAM_TIMEFRAME);
+    this.registerChart({
+      ids,
+      handleBar: (candle) => subject.next(candle),
+    });
   }
 
   private ensureReady(): Promise<void> {
@@ -162,7 +196,10 @@ export class TradovateProvider implements DataProvider {
     const token = await this.getToken();
     return new Promise<void>((resolve, reject) => {
       const timer = setTimeout(
-        () => reject(new Error('Tradovate connection timed out before authorization')),
+        () =>
+          reject(
+            new Error('Tradovate connection timed out before authorization'),
+          ),
         CONNECT_TIMEOUT_MS,
       );
       timer.unref?.();
@@ -179,7 +216,9 @@ export class TradovateProvider implements DataProvider {
         this.handleFrame(event.data, token, onReady, onError);
       });
       this.ws.addEventListener('close', () => this.stopHeartbeat());
-      this.ws.addEventListener('error', () => onError(new Error('Tradovate socket error')));
+      this.ws.addEventListener('error', () =>
+        onError(new Error('Tradovate socket error')),
+      );
     });
   }
 
@@ -207,7 +246,9 @@ export class TradovateProvider implements DataProvider {
     }
     const value = data.mdAccessToken ?? data.accessToken;
     if (!value) {
-      throw new Error('Tradovate authentication failed: no access token returned');
+      throw new Error(
+        'Tradovate authentication failed: no access token returned',
+      );
     }
     return value;
   }
@@ -249,7 +290,9 @@ export class TradovateProvider implements DataProvider {
           if (s === 200) {
             pending.resolve(d);
           } else {
-            pending.reject(new Error(`Tradovate request ${i} failed with status ${s}`));
+            pending.reject(
+              new Error(`Tradovate request ${i} failed with status ${s}`),
+            );
           }
         }
         continue;
