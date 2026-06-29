@@ -10,7 +10,7 @@ import { useLiveCandles } from './hooks/useLiveCandles';
 import { computeQuote } from './utils/compute-quote';
 
 const DEFAULT_COUNT = 300;
-const DEFAULT_TIMEFRAME = '1Min';
+const DEFAULT_TIMEFRAME = '1Day';
 
 export default function App() {
   const [candles, setCandles] = useState<Candle[]>([]);
