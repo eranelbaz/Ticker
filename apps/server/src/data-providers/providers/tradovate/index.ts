@@ -81,8 +81,60 @@ export class TradovateProvider implements DataProvider {
     this.wsFactory = wsFactory ?? (() => new global.WebSocket(TRADOVATE_MD_WS_URL));
   }
 
-  getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]> {
-    throw new Error('not implemented');
+  async getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]> {
+    await this.ensureReady();
+    const { ids, realtimeId } = await this.requestChart(symbol, count, timeframe);
+    const bars: Candle[] = [];
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          this.unregisterChart(ids);
+          reject(new Error(`Timed out fetching history for symbol ${symbol}`));
+        }, HISTORY_TIMEOUT_MS);
+        timer.unref?.();
+        this.registerChart({
+          ids,
+          handleBar: (candle) => bars.push(candle),
+          handleEoh: () => {
+            clearTimeout(timer);
+            this.unregisterChart(ids);
+            resolve();
+          },
+        });
+      });
+    } finally {
+      void this.send('md/cancelChart', { subscriptionId: realtimeId }).catch(() => undefined);
+    }
+    if (bars.length === 0) {
+      throw new Error(`No market data returned for symbol ${symbol}`);
+    }
+    return bars.sort((a, b) => a.time - b.time);
+  }
+
+  private async requestChart(
+    symbol: string,
+    count: number,
+    timeframe: string,
+  ): Promise<{ ids: number[]; realtimeId: number }> {
+    const raw = await this.send('md/getChart', buildGetChartBody({ symbol, count, timeframe }));
+    const throttle = tradovateThrottleSchema.safeParse(raw);
+    if (throttle.success) {
+      const err = throttleError(throttle.data, 'md/getChart');
+      if (err) {
+        throw err;
+      }
+    }
+    const parsed = tradovateGetChartResultSchema.safeParse(raw);
+    const realtimeId = parsed.success
+      ? parsed.data.realtimeId ?? parsed.data.subscriptionId
+      : undefined;
+    if (!parsed.success || realtimeId === undefined) {
+      throw new Error(`Tradovate md/getChart returned an unexpected response: ${JSON.stringify(raw)}`);
+    }
+    const ids = [parsed.data.historicalId, realtimeId].filter(
+      (id): id is number => id !== undefined,
+    );
+    return { ids, realtimeId };
   }
 
   getStreamData(symbol: string): Observable<Candle> {
@@ -210,7 +262,32 @@ export class TradovateProvider implements DataProvider {
   }
 
   private handleChart(charts: TradovateChartPacket[]): void {
-    void charts;
+    for (const packet of charts) {
+      const sub = this.chartHandlers.get(packet.id);
+      if (!sub) {
+        continue;
+      }
+      if (packet.bars) {
+        for (const raw of packet.bars) {
+          sub.handleBar(mapChartBar(raw));
+        }
+      }
+      if (packet.eoh) {
+        sub.handleEoh?.();
+      }
+    }
+  }
+
+  private registerChart(sub: ChartSubscription): void {
+    for (const id of sub.ids) {
+      this.chartHandlers.set(id, sub);
+    }
+  }
+
+  private unregisterChart(ids: number[]): void {
+    for (const id of ids) {
+      this.chartHandlers.delete(id);
+    }
   }
 
   private send(endpoint: string, body: unknown): Promise<unknown> {

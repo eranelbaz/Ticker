@@ -114,3 +114,79 @@ describe('TradovateProvider connect + authorize', () => {
     expect(fake.sentMessages[0]).toBe('authorize\n0\n\n"md-token"');
   });
 });
+
+describe('TradovateProvider getHistoricalData', () => {
+  const originalEnv = process.env;
+  let postSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, ...CREDS_ENV };
+    postSpy = jest.spyOn(axios, 'post').mockResolvedValue({
+      data: { mdAccessToken: 'md-token', expirationTime: FUTURE_ISO },
+    });
+  });
+
+  afterEach(() => {
+    postSpy.mockRestore();
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  const bar = (timestamp: string, close: number) => ({
+    timestamp,
+    open: close,
+    high: close + 1,
+    low: close - 1,
+    close,
+    upVolume: 10,
+    downVolume: 5,
+  });
+
+  it('collects bars until eoh, cancels the chart, and returns sorted candles', async () => {
+    const fake = new FakeSocket();
+    const provider = new TradovateProvider(() => fake);
+
+    const promise = provider.getHistoricalData('MESU6', 2, '1Min');
+    await flush();
+    fake.simulateOpen();
+    fake.simulateAuthorized();
+    await flush();
+
+    expect(fake.sentMessages.some((m) => m.startsWith('md/getChart'))).toBe(true);
+
+    fake.simulateResponse(1, { historicalId: 10, realtimeId: 11 });
+    await flush();
+
+    fake.simulateChart([
+      { id: 10, bars: [bar('2024-01-02T00:00:00Z', 200), bar('2024-01-01T00:00:00Z', 100)] },
+    ]);
+    fake.simulateChart([{ id: 10, eoh: true }]);
+
+    const candles = await promise;
+
+    expect(candles).toHaveLength(2);
+    expect(candles[0].close).toBe(100);
+    expect(candles[1].close).toBe(200);
+    expect(candles[0].time).toBeLessThan(candles[1].time);
+    expect(candles[0].volume).toBe(15);
+    expect(fake.sentMessages.some((m) => m.startsWith('md/cancelChart'))).toBe(true);
+  });
+
+  it('throws when history is empty', async () => {
+    const fake = new FakeSocket();
+    const provider = new TradovateProvider(() => fake);
+
+    const promise = provider.getHistoricalData('MESU6', 2, '1Min');
+    await flush();
+    fake.simulateOpen();
+    fake.simulateAuthorized();
+    await flush();
+    fake.simulateResponse(1, { historicalId: 10, realtimeId: 11 });
+    await flush();
+    fake.simulateChart([{ id: 10, eoh: true }]);
+
+    await expect(promise).rejects.toThrow('No market data returned for symbol MESU6');
+  });
+});
