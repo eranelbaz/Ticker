@@ -29,7 +29,7 @@ export class AlpacaProvider implements DataProvider {
 
   async getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]> {
     const response = await axios.get<AlpacaBarsResponse>(
-      buildBarsUrl(symbol, count, timeframe),
+      buildBarsUrl({ symbol, count, timeframe }),
       {
         headers: {
           'APCA-API-KEY-ID': this.keyId,

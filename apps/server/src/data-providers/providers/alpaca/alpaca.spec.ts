@@ -93,7 +93,7 @@ describe('AlpacaProvider', () => {
 describe('buildBarsUrl', () => {
   it('generates correct URL with parameters', () => {
     const fixedDate = new Date('2024-01-10T00:00:00Z');
-    const url = buildBarsUrl('AAPL', 10, '1Day', fixedDate);
+    const url = buildBarsUrl({ symbol: 'AAPL', count: 10, timeframe: '1Day', now: fixedDate });
 
     expect(url).toContain('https://data.alpaca.markets/v2/stocks/AAPL/bars?');
     expect(url).toContain('timeframe=1Day');
@@ -106,18 +106,16 @@ describe('buildBarsUrl', () => {
 
   it('calculates start date based on count for daily timeframe', () => {
     const fixedDate = new Date('2024-01-10T00:00:00Z');
-    const url = buildBarsUrl('AAPL', 5, '1Day', fixedDate);
+    const url = buildBarsUrl({ symbol: 'AAPL', count: 5, timeframe: '1Day', now: fixedDate });
 
-    // start = now - (5 * 2 + 5) * DAY = now - 15 days = 2023-12-26
     expect(url).toContain('start=2023-12-26');
   });
 
   it('honors the requested timeframe and scales the lookback to it', () => {
     const fixedDate = new Date('2024-01-10T00:00:00Z');
-    const url = buildBarsUrl('AAPL', 10, '1Min', fixedDate);
+    const url = buildBarsUrl({ symbol: 'AAPL', count: 10, timeframe: '1Min', now: fixedDate });
 
     expect(url).toContain('timeframe=1Min');
-    // start = now - (10 * 2 + 5) * 60s = now - 25 min = 2024-01-09T23:35:00Z
     expect(url).toContain('start=2024-01-09T23%3A35%3A00.000Z');
   });
 });

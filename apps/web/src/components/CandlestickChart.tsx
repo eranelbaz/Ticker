@@ -14,7 +14,7 @@ import { timeframeToSeconds } from '@ticker/shared';
 import type { Candle } from '@ticker/server';
 import type { DrawingTool } from '../drawings/types';
 import { chartTheme } from '../config/chartTheme';
-import { foldLiveBar } from '../lib/live-aggregator';
+import { aggregateLiveBar } from '../lib/live-aggregator';
 
 type Props = {
   candles: Candle[];
@@ -105,17 +105,17 @@ export function CandlestickChart({
     if (!series || !liveCandle) return;
 
     const base = lastCandleRef.current;
-    const folded = base
-      ? foldLiveBar(base, liveCandle, timeframeToSeconds(timeframe))
+    const aggregated = base
+      ? aggregateLiveBar(base, liveCandle, timeframeToSeconds(timeframe))
       : liveCandle;
-    lastCandleRef.current = folded;
+    lastCandleRef.current = aggregated;
 
     series.update({
-      time: Math.floor(folded.time) as UTCTimestamp,
-      open: folded.open,
-      high: folded.high,
-      low: folded.low,
-      close: folded.close,
+      time: Math.floor(aggregated.time) as UTCTimestamp,
+      open: aggregated.open,
+      high: aggregated.high,
+      low: aggregated.low,
+      close: aggregated.close,
     });
   }, [liveCandle, series, timeframe]);
 
