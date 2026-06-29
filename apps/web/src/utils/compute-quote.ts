@@ -14,7 +14,7 @@ export function computeQuote(
   const priceSource = liveCandle ?? lastCandle;
   if (!priceSource) return null;
 
-  const baseline = candles[0]?.open ?? priceSource.open;
+  const baseline = lastCandle?.open ?? priceSource.open;
   const price = priceSource.close;
   const change = price - baseline;
   const changePercent = baseline === 0 ? 0 : (change / baseline) * 100;

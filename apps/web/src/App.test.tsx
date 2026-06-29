@@ -199,7 +199,7 @@ describe('App', () => {
 
     render(<App />);
     expect(await screen.findByTestId('price')).toHaveTextContent('$120.00');
-    expect(screen.getByTestId('change')).toHaveTextContent('20.00 (20.00%)');
+    expect(screen.getByTestId('change')).toHaveTextContent('15.00 (14.29%)');
   });
 
   it('updates price when a live candle arrives', async () => {
