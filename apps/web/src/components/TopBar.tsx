@@ -12,6 +12,9 @@ const signedFormat = new Intl.NumberFormat('en-US', {
   signDisplay: 'always',
 });
 
+const UP_TRIANGLE = '\u25b2';
+const DOWN_TRIANGLE = '\u25bc';
+
 type Props = {
   symbol: string;
   quote: Quote | null;
@@ -43,7 +46,7 @@ export function TopBar({ symbol, quote, isLive }: Props) {
               up ? 'text-green-400' : 'text-red-400',
             )}
           >
-            {up ? '\u25b2' : '\u25bc'} {signedFormat.format(quote.change)} (
+            {up ? UP_TRIANGLE : DOWN_TRIANGLE} {signedFormat.format(quote.change)} (
             {signedFormat.format(quote.changePercent)}%)
           </span>
         </>
