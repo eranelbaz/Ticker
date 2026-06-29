@@ -224,8 +224,6 @@ describe('CandlestickChart', () => {
       <CandlestickChart candles={candles} liveCandle={liveCandle} />,
     );
 
-    // Live bar folds into the last candle (same daily bucket): time and open
-    // are kept from the last candle, high/low/close merged.
     expect(mockUpdate).toHaveBeenCalledWith({
       time: 2,
       open: 11,

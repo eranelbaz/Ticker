@@ -48,4 +48,16 @@ describe('foldLiveBar', () => {
       c(660, 6, 6.5, 5.8, 6.2, 3),
     );
   });
+
+  it('never moves time backwards when the live bar is earlier in the same bucket', () => {
+    const sessionOpen = 1700000000;
+    const last = c(sessionOpen, 10, 12, 9, 11, 100);
+    const earlierLiveBar = c(sessionOpen - 3600, 11, 15, 8, 13, 50);
+
+    const folded = foldLiveBar(last, earlierLiveBar, dayTf);
+
+    expect(folded.time).toBe(sessionOpen);
+    expect(folded.time).toBeGreaterThanOrEqual(last.time);
+    expect(folded).toEqual(c(sessionOpen, 10, 15, 8, 13, 150));
+  });
 });

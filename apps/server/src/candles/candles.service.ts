@@ -18,8 +18,6 @@ export class CandlesService {
     }
   }
 
-  // Emits raw provider bars; the client folds them into the active timeframe
-  // candle (see web foldLiveBar) so live updates align with historical times.
   stream(symbol: string, _timeframe: string): Observable<Candle> {
     return this.provider.getStreamData(symbol);
   }
