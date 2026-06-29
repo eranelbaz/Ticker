@@ -70,12 +70,7 @@ describe('CandlesController', () => {
   describe('stream (SSE)', () => {
     it('delegates to the candles service', () => {
       (controller as any).stream('SPY');
-      expect(service.stream).toHaveBeenCalledWith('SPY', undefined);
-    });
-
-    it('passes through the timeframe query param', () => {
-      (controller as any).stream('AAPL', '1Hour');
-      expect(service.stream).toHaveBeenCalledWith('AAPL', '1Hour');
+      expect(service.stream).toHaveBeenCalledWith('SPY');
     });
 
     it('emits MessageEvent objects with candle data', () => {

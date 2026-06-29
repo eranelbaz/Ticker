@@ -4,16 +4,15 @@ import { subscribeLiveCandles } from '../api/liveCandles';
 
 export function useLiveCandles(
   symbol: string | null,
-  timeframe: string,
 ): Candle | null {
   const [candle, setCandle] = useState<Candle | null>(null);
 
   useEffect(() => {
     if (!symbol) return;
 
-    const unsubscribe = subscribeLiveCandles(symbol, timeframe, setCandle);
+    const unsubscribe = subscribeLiveCandles(symbol, setCandle);
     return unsubscribe;
-  }, [symbol, timeframe]);
+  }, [symbol]);
 
   return candle;
 }

@@ -19,7 +19,7 @@ export default function App() {
   const [activeTool, setActiveTool] = useState<DrawingTool | null>(null);
   const [configSymbol, setConfigSymbol] = useState<string | null>(null);
 
-  const liveCandle = useLiveCandles(configSymbol, DEFAULT_TIMEFRAME);
+  const liveCandle = useLiveCandles(configSymbol);
 
   useEffect(() => {
     let cancelled = false;

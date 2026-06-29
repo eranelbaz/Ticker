@@ -30,7 +30,7 @@ describe('CandlesService', () => {
       const bars = [bar(100, 10), bar(160, 11), bar(220, 9)];
       provider.getStreamData.mockReturnValue(of(...bars));
 
-      const emitted = await firstValueFrom(service.stream('SPY', '1Day').pipe(toArray()));
+      const emitted = await firstValueFrom(service.stream('SPY').pipe(toArray()));
 
       expect(emitted).toEqual(bars);
       expect(provider.getStreamData).toHaveBeenCalledWith('SPY');

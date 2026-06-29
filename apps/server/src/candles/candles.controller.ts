@@ -36,9 +36,8 @@ export class CandlesController {
   @Sse()
   stream(
     @Param('symbol') symbol: string,
-    @Query('timeframe') timeframe: string,
   ): Observable<MessageEvent> {
-    return this.candlesService.stream(symbol, timeframe).pipe(
+    return this.candlesService.stream(symbol).pipe(
       map((candle) => new MessageEvent('message', { data: JSON.stringify(candle) })),
     );
   }

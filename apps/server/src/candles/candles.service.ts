@@ -18,7 +18,7 @@ export class CandlesService {
     }
   }
 
-  stream(symbol: string, _timeframe: string): Observable<Candle> {
+  stream(symbol: string): Observable<Candle> {
     return this.provider.getStreamData(symbol);
   }
 }

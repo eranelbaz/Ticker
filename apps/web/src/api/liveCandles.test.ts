@@ -21,10 +21,10 @@ describe('subscribeLiveCandles', () => {
   });
 
   it('opens EventSource to the correct URL', () => {
-    subscribeLiveCandles('BTCUSD', '1m', () => {});
+    subscribeLiveCandles('BTCUSD', () => {});
 
     expect((global as any).EventSource).toHaveBeenCalledWith(
-      '/api/candles/BTCUSD/stream?timeframe=1m',
+      '/api/candles/BTCUSD/stream',
     );
   });
 
@@ -42,7 +42,7 @@ describe('subscribeLiveCandles', () => {
     );
 
     const candles: any[] = [];
-    subscribeLiveCandles('BTCUSD', '1m', (candle) => {
+    subscribeLiveCandles('BTCUSD', (candle) => {
       candles.push(candle);
     });
 
@@ -66,7 +66,7 @@ describe('subscribeLiveCandles', () => {
       },
     }));
 
-    const unsubscribe = subscribeLiveCandles('BTCUSD', '1m', () => {});
+    const unsubscribe = subscribeLiveCandles('BTCUSD', () => {});
     expect(closeCalled).toBe(false);
 
     unsubscribe();
