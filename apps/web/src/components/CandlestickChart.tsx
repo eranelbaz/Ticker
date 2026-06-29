@@ -10,13 +10,16 @@ import {
   type ISeriesApi,
   type UTCTimestamp,
 } from 'lightweight-charts';
+import { timeframeToSeconds } from '@ticker/shared';
 import type { Candle } from '@ticker/server';
 import type { DrawingTool } from '../drawings/types';
 import { chartTheme } from '../config/chartTheme';
+import { foldLiveBar } from '../lib/live-aggregator';
 
 type Props = {
   candles: Candle[];
   liveCandle?: Candle | null;
+  timeframe?: string;
   activeTool?: DrawingTool | null;
   onToolDeselect?: () => void;
 };
@@ -24,6 +27,7 @@ type Props = {
 export function CandlestickChart({
   candles,
   liveCandle,
+  timeframe = '1Day',
   activeTool = null,
   onToolDeselect,
 }: Props) {
@@ -31,6 +35,7 @@ export function CandlestickChart({
   const [chart, setChart] = useState<IChartApi | null>(null);
   const [series, setSeries] = useState<ISeriesApi<'Candlestick'> | null>(null);
   const drawingStateRef = useRef<DrawingState>({ phase: 'idle', finished: [] });
+  const lastCandleRef = useRef<Candle | null>(null);
   const crosshairTimeRef = useRef<UTCTimestamp | null>(null);
   const crosshairPriceRef = useRef<number | null>(null);
   const textPrimitivesRef = useRef<TextPrimitive[]>([]);
@@ -92,20 +97,27 @@ export function CandlestickChart({
         close: c.close,
       })),
     );
+    lastCandleRef.current = candles.at(-1) ?? null;
     chart?.timeScale().fitContent();
   }, [candles, series, chart]);
 
   useEffect(() => {
     if (!series || !liveCandle) return;
 
+    const base = lastCandleRef.current;
+    const folded = base
+      ? foldLiveBar(base, liveCandle, timeframeToSeconds(timeframe))
+      : liveCandle;
+    lastCandleRef.current = folded;
+
     series.update({
-      time: Math.floor(liveCandle.time) as UTCTimestamp,
-      open: liveCandle.open,
-      high: liveCandle.high,
-      low: liveCandle.low,
-      close: liveCandle.close,
+      time: Math.floor(folded.time) as UTCTimestamp,
+      open: folded.open,
+      high: folded.high,
+      low: folded.low,
+      close: folded.close,
     });
-  }, [liveCandle, series]);
+  }, [liveCandle, series, timeframe]);
 
   return (
     <div ref={containerRef} className="relative h-full w-full">

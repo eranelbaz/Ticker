@@ -75,6 +75,7 @@ export default function App() {
         <CandlestickChart
           candles={candles}
           liveCandle={liveCandle}
+          timeframe={DEFAULT_TIMEFRAME}
           activeTool={activeTool}
           onToolDeselect={() => setActiveTool(null)}
         />
