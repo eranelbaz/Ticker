@@ -282,3 +282,42 @@ describe('TradovateProvider getStreamData', () => {
     expect(a).toBe(b);
   });
 });
+
+describe('TradovateProvider getStreamData stream failure recovery', () => {
+  const originalEnv = process.env;
+  let postSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, ...CREDS_ENV };
+  });
+
+  afterEach(() => {
+    postSpy?.mockRestore();
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  it('evicts the errored symbol so a subsequent call returns a new observable', async () => {
+    postSpy = jest
+      .spyOn(axios, 'post')
+      .mockRejectedValueOnce(new Error('network failure'));
+
+    const provider = new TradovateProvider(() => new FakeSocket());
+
+    const first = provider.getStreamData('MESU6');
+    await flush();
+
+    const firstError = firstValueFrom(first).then(
+      () => null,
+      (err: Error) => err,
+    );
+
+    const err = await firstError;
+    expect(err).toBeInstanceOf(Error);
+
+    const second = provider.getStreamData('MESU6');
+    expect(second).not.toBe(first);
+  });
+});

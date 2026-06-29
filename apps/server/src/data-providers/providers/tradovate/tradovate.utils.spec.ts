@@ -34,7 +34,9 @@ describe('buildRequestFrame', () => {
   });
 
   it('formats a frame with an empty body when none is provided', () => {
-    expect(buildRequestFrame('md/cancelChart', 3)).toBe('md/cancelChart\n3\n\n');
+    expect(buildRequestFrame('md/cancelChart', 3)).toBe(
+      'md/cancelChart\n3\n\n',
+    );
   });
 });
 
@@ -44,7 +46,10 @@ describe('prepareFrame', () => {
   });
 
   it('parses an "a" data frame into its array of items', () => {
-    expect(prepareFrame('a[{"i":0,"s":200}]')).toEqual(['a', [{ i: 0, s: 200 }]]);
+    expect(prepareFrame('a[{"i":0,"s":200}]')).toEqual([
+      'a',
+      [{ i: 0, s: 200 }],
+    ]);
   });
 
   it('wraps a non-array payload in an array', () => {
@@ -82,13 +87,17 @@ describe('timeframeToChartDescription', () => {
   });
 
   it('throws on an unsupported timeframe', () => {
-    expect(() => timeframeToChartDescription('1Sec')).toThrow('Unsupported Tradovate timeframe: 1Sec');
+    expect(() => timeframeToChartDescription('1Sec')).toThrow(
+      'Unsupported Tradovate timeframe: 1Sec',
+    );
   });
 });
 
 describe('buildGetChartBody', () => {
   it('builds a getChart body with chartDescription and timeRange', () => {
-    expect(buildGetChartBody({ symbol: 'MESU6', count: 300, timeframe: '1Min' })).toEqual({
+    expect(
+      buildGetChartBody({ symbol: 'MESU6', count: 300, timeframe: '1Min' }),
+    ).toEqual({
       symbol: 'MESU6',
       chartDescription: {
         underlyingType: 'MinuteBar',
@@ -130,6 +139,12 @@ describe('mapChartBar', () => {
       close: 1.5,
     });
     expect(candle.volume).toBe(0);
+  });
+});
+
+describe('TRADOVATE_MD_WS_URL', () => {
+  it('is the shared market-data websocket URL', () => {
+    expect(TRADOVATE_MD_WS_URL).toBe('wss://md.tradovateapi.com/v1/websocket');
   });
 });
 

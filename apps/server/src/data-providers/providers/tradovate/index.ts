@@ -163,9 +163,11 @@ export class TradovateProvider implements DataProvider {
     this.barSubjects.set(symbol, subject);
     const observable = subject.asObservable();
     this.barObservables.set(symbol, observable);
-    void this.startStream(symbol, subject).catch((err) =>
-      subject.error(err as Error),
-    );
+    void this.startStream(symbol, subject).catch((err) => {
+      subject.error(err as Error);
+      this.barSubjects.delete(symbol);
+      this.barObservables.delete(symbol);
+    });
     return observable;
   }
 
