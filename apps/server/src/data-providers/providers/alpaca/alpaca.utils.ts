@@ -4,25 +4,30 @@ import { AlpacaBar, AlpacaStreamBar } from './alpaca.types';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
-export function buildBarsUrl(opts: {
+type BuildBarsUrlParams = {
   symbol: string;
   count: number;
   timeframe?: string;
   now?: Date;
-}): string {
-  const timeframe = opts.timeframe ?? '1Day';
-  const now = opts.now ?? new Date();
-  const lookbackMs = (opts.count * 2 + 5) * timeframeToSeconds(timeframe) * 1000;
+};
+
+export function buildBarsUrl({
+  symbol,
+  count,
+  timeframe = '1Day',
+  now = new Date(),
+}: BuildBarsUrlParams): string {
+  const lookbackMs = (count * 2 + 5) * timeframeToSeconds(timeframe) * 1000;
   const start = new Date(now.getTime() - lookbackMs);
   const params = new URLSearchParams({
     timeframe,
     feed: 'iex',
     sort: 'desc',
-    limit: String(opts.count),
+    limit: String(count),
     start: start.toISOString(),
     end: now.toISOString(),
   });
-  return `${ALPACA_DATA_BASE_URL}/v2/stocks/${opts.symbol}/bars?${params.toString()}`;
+  return `${ALPACA_DATA_BASE_URL}/v2/stocks/${symbol}/bars?${params.toString()}`;
 }
 
 export function mapBar(bar: AlpacaBar): Candle {
