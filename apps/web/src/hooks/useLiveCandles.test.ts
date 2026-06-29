@@ -19,7 +19,7 @@ describe('useLiveCandles', () => {
     const fakeSource = new FakeEventSource();
     (global as any).EventSource.mockImplementation(() => fakeSource);
 
-    const { result } = renderHook(() => useLiveCandles('BTCUSD', '1m'));
+    const { result } = renderHook(() => useLiveCandles('BTCUSD'));
 
     expect(result.current).toBeNull();
 
@@ -57,7 +57,7 @@ describe('useLiveCandles', () => {
     };
     (global as any).EventSource.mockImplementation(() => fakeSource);
 
-    const { unmount } = renderHook(() => useLiveCandles('BTCUSD', '1m'));
+    const { unmount } = renderHook(() => useLiveCandles('BTCUSD'));
     expect(closeCalled).toBe(false);
 
     unmount();

@@ -17,6 +17,6 @@ export const alpacaStreamBarSchema = alpacaBarSchema.extend({
 });
 
 export const alpacaAuthenticatedSchema = z.object({
-  T: z.literal('status'),
-  status: z.literal('authenticated'),
+  T: z.literal('success'),
+  msg: z.literal('authenticated'),
 });

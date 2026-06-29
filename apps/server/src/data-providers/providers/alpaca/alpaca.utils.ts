@@ -1,14 +1,26 @@
+import { timeframeToSeconds } from '@ticker/shared';
 import { Candle } from '../../../candles/candles.type';
 import { AlpacaBar, AlpacaStreamBar } from './alpaca.types';
 
 export const ALPACA_DATA_BASE_URL = 'https://data.alpaca.markets';
 
-const DAY_MS = 86_400_000;
+type BuildBarsUrlParams = {
+  symbol: string;
+  count: number;
+  timeframe?: string;
+  now?: Date;
+};
 
-export function buildBarsUrl(symbol: string, count: number, now: Date = new Date()): string {
-  const start = new Date(now.getTime() - (count * 2 + 5) * DAY_MS);
+export function buildBarsUrl({
+  symbol,
+  count,
+  timeframe = '1Day',
+  now = new Date(),
+}: BuildBarsUrlParams): string {
+  const lookbackMs = (count * 2 + 5) * timeframeToSeconds(timeframe) * 1000;
+  const start = new Date(now.getTime() - lookbackMs);
   const params = new URLSearchParams({
-    timeframe: '1Day',
+    timeframe,
     feed: 'iex',
     sort: 'desc',
     limit: String(count),

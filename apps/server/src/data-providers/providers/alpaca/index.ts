@@ -24,12 +24,12 @@ export class AlpacaProvider implements DataProvider {
     }
     this.keyId = keyId;
     this.secretKey = secretKey;
-    this.wsFactory = wsFactory ?? (() => new global.WebSocket('wss://stream.data.alpaca.markets/v1beta1/stocks/bars'));
+    this.wsFactory = wsFactory ?? (() => new global.WebSocket('wss://stream.data.alpaca.markets/v2/iex'));
   }
 
-  async getHistoricalData(symbol: string, count: number, _timeframe: string): Promise<Candle[]> {
+  async getHistoricalData(symbol: string, count: number, timeframe: string): Promise<Candle[]> {
     const response = await axios.get<AlpacaBarsResponse>(
-      buildBarsUrl(symbol, count),
+      buildBarsUrl({ symbol, count, timeframe }),
       {
         headers: {
           'APCA-API-KEY-ID': this.keyId,
@@ -81,15 +81,16 @@ export class AlpacaProvider implements DataProvider {
         return;
       }
 
-      if (alpacaAuthenticatedSchema.safeParse(raw).success) {
-        this.onAuthenticated();
-      }
+      const messages = Array.isArray(raw) ? raw : [raw];
+      for (const message of messages) {
+        if (alpacaAuthenticatedSchema.safeParse(message).success) {
+          this.onAuthenticated();
+          continue;
+        }
 
-      const result = alpacaStreamBarSchema.safeParse(raw);
-      if (result.success) {
-        const subject = this.barSubjects.get(result.data.S);
-        if (subject) {
-          subject.next(mapStreamBar(result.data));
+        const result = alpacaStreamBarSchema.safeParse(message);
+        if (result.success) {
+          this.barSubjects.get(result.data.S)?.next(mapStreamBar(result.data));
         }
       }
     });

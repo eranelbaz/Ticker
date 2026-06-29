@@ -93,7 +93,7 @@ describe('AlpacaProvider', () => {
 describe('buildBarsUrl', () => {
   it('generates correct URL with parameters', () => {
     const fixedDate = new Date('2024-01-10T00:00:00Z');
-    const url = buildBarsUrl('AAPL', 10, fixedDate);
+    const url = buildBarsUrl({ symbol: 'AAPL', count: 10, timeframe: '1Day', now: fixedDate });
 
     expect(url).toContain('https://data.alpaca.markets/v2/stocks/AAPL/bars?');
     expect(url).toContain('timeframe=1Day');
@@ -104,12 +104,19 @@ describe('buildBarsUrl', () => {
     expect(url).toContain('end=2024-01-10T00%3A00%3A00.000Z');
   });
 
-  it('calculates start date based on count', () => {
+  it('calculates start date based on count for daily timeframe', () => {
     const fixedDate = new Date('2024-01-10T00:00:00Z');
-    const url = buildBarsUrl('AAPL', 5, fixedDate);
+    const url = buildBarsUrl({ symbol: 'AAPL', count: 5, timeframe: '1Day', now: fixedDate });
 
-    // start = now - (5 * 2 + 5) * DAY_MS = now - 15 days = 2023-12-26
     expect(url).toContain('start=2023-12-26');
+  });
+
+  it('honors the requested timeframe and scales the lookback to it', () => {
+    const fixedDate = new Date('2024-01-10T00:00:00Z');
+    const url = buildBarsUrl({ symbol: 'AAPL', count: 10, timeframe: '1Min', now: fixedDate });
+
+    expect(url).toContain('timeframe=1Min');
+    expect(url).toContain('start=2024-01-09T23%3A35%3A00.000Z');
   });
 });
 
@@ -398,11 +405,11 @@ class FakeSocket {
   }
 
   simulateAuthenticated(): void {
-    this._emit('message', [{ data: JSON.stringify({ T: 'status', status: 'authenticated', message: 'authenticated' }) }]);
+    this._emit('message', [{ data: JSON.stringify([{ T: 'success', msg: 'authenticated' }]) }]);
   }
 
   simulateMessage(raw: string): void {
-    this._emit('message', [{ data: raw }]);
+    this._emit('message', [{ data: JSON.stringify([JSON.parse(raw)]) }]);
   }
 
   private _emit(type: string, args: any[]): void {

@@ -31,7 +31,7 @@ let updateCandleCalls: Candle[] = [];
 let capturedOnCandle: ((candle: Candle) => void) | null = null;
 
 jest.mock('./api/liveCandles', () => ({
-  subscribeLiveCandles: jest.fn().mockImplementation((_symbol: string, _timeframe: string, onCandle: (candle: Candle) => void) => {
+  subscribeLiveCandles: jest.fn().mockImplementation((_symbol: string, onCandle: (candle: Candle) => void) => {
     capturedOnCandle = (candle: Candle) => {
       updateCandleCalls.push(candle);
       onCandle(candle);

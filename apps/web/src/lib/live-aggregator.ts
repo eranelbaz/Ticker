@@ -1,6 +1,6 @@
 import type { Candle } from '@ticker/server';
 
-export function foldLiveBar(
+export function aggregateLiveBar(
   current: Candle,
   bar: Candle,
   timeframeSeconds: number,

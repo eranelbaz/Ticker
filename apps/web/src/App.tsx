@@ -10,7 +10,7 @@ import { useLiveCandles } from './hooks/useLiveCandles';
 import { computeQuote } from './utils/compute-quote';
 
 const DEFAULT_COUNT = 300;
-const DEFAULT_TIMEFRAME = '1Min';
+const DEFAULT_TIMEFRAME = '1Day';
 
 export default function App() {
   const [candles, setCandles] = useState<Candle[]>([]);
@@ -19,7 +19,7 @@ export default function App() {
   const [activeTool, setActiveTool] = useState<DrawingTool | null>(null);
   const [configSymbol, setConfigSymbol] = useState<string | null>(null);
 
-  const liveCandle = useLiveCandles(configSymbol, DEFAULT_TIMEFRAME);
+  const liveCandle = useLiveCandles(configSymbol);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +27,7 @@ export default function App() {
       .then((config) => {
         setConfigSymbol(config.defaultSymbol);
         if (!cancelled) {
-          return fetchCandles(config.defaultSymbol, DEFAULT_COUNT);
+          return fetchCandles(config.defaultSymbol, DEFAULT_COUNT, DEFAULT_TIMEFRAME);
         }
       })
       .then((data) => {
@@ -75,6 +75,7 @@ export default function App() {
         <CandlestickChart
           candles={candles}
           liveCandle={liveCandle}
+          timeframe={DEFAULT_TIMEFRAME}
           activeTool={activeTool}
           onToolDeselect={() => setActiveTool(null)}
         />

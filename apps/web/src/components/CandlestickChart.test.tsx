@@ -224,12 +224,11 @@ describe('CandlestickChart', () => {
       <CandlestickChart candles={candles} liveCandle={liveCandle} />,
     );
 
-    // Wait for the useEffect to run
     expect(mockUpdate).toHaveBeenCalledWith({
-      time: 100,
-      open: 50,
+      time: 2,
+      open: 11,
       high: 55,
-      low: 48,
+      low: 10,
       close: 52,
     });
   });

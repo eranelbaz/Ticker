@@ -2,10 +2,9 @@ import type { Candle } from '@ticker/server';
 
 export function subscribeLiveCandles(
   symbol: string,
-  timeframe: string,
   onCandle: (candle: Candle) => void,
 ): () => void {
-  const url = `/api/candles/${encodeURIComponent(symbol)}/stream?timeframe=${encodeURIComponent(timeframe)}`;
+  const url = `/api/candles/${encodeURIComponent(symbol)}/stream`;
   const source = new EventSource(url);
 
   source.onmessage = (event: MessageEvent) => {
