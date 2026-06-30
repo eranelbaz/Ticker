@@ -321,3 +321,90 @@ describe('TradovateProvider getStreamData stream failure recovery', () => {
     expect(second).not.toBe(first);
   });
 });
+
+describe('TradovateProvider credential-only auth (Path B)', () => {
+  const originalEnv = process.env;
+  let postSpy: jest.SpyInstance;
+
+  afterEach(() => {
+    postSpy?.mockRestore();
+    process.env = originalEnv;
+  });
+
+  it('constructs with only username and password (no cid/sec)', () => {
+    process.env = {
+      ...originalEnv,
+      TRADOVATE_USERNAME: 'user',
+      TRADOVATE_PASSWORD: 'pass',
+    };
+    delete process.env.TRADOVATE_CID;
+    delete process.env.TRADOVATE_SECRET;
+    expect(() => new TradovateProvider(() => new FakeSocket())).not.toThrow();
+  });
+
+  it('omits cid and sec from the auth body when they are not configured', async () => {
+    process.env = {
+      ...originalEnv,
+      TRADOVATE_USERNAME: 'user',
+      TRADOVATE_PASSWORD: 'pass',
+    };
+    delete process.env.TRADOVATE_CID;
+    delete process.env.TRADOVATE_SECRET;
+    delete process.env.TRADOVATE_DEVICE_ID;
+    postSpy = jest
+      .spyOn(axios, 'post')
+      .mockResolvedValue({ data: { mdAccessToken: 'md-token' } });
+
+    const provider = new TradovateProvider(() => new FakeSocket());
+    void provider.getStreamData('MESU6');
+    await flush();
+
+    const body = postSpy.mock.calls[0][1];
+    expect(body).toEqual(
+      expect.objectContaining({ name: 'user', password: 'pass' }),
+    );
+    expect(body).not.toHaveProperty('cid');
+    expect(body).not.toHaveProperty('sec');
+  });
+
+  it('throws an actionable error when the auth response requires a captcha', async () => {
+    process.env = {
+      ...originalEnv,
+      TRADOVATE_USERNAME: 'user',
+      TRADOVATE_PASSWORD: 'pass',
+    };
+    postSpy = jest.spyOn(axios, 'post').mockResolvedValue({
+      data: { 'p-ticket': 'tkt', 'p-time': 60, 'p-captcha': true },
+    });
+
+    const provider = new TradovateProvider(() => new FakeSocket());
+
+    await expect(
+      provider.getHistoricalData('MESU6', 2, '1Min'),
+    ).rejects.toThrow(/captcha/i);
+  });
+
+  it('retries after a time penalty using the p-ticket and then authorizes', async () => {
+    process.env = {
+      ...originalEnv,
+      TRADOVATE_USERNAME: 'user',
+      TRADOVATE_PASSWORD: 'pass',
+    };
+    postSpy = jest
+      .spyOn(axios, 'post')
+      .mockResolvedValueOnce({ data: { 'p-ticket': 'tkt', 'p-time': 0 } })
+      .mockResolvedValueOnce({ data: { mdAccessToken: 'md-token' } });
+
+    const provider = new TradovateProvider(() => new FakeSocket());
+    void provider.getStreamData('MESU6');
+
+    await flush();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await flush();
+
+    expect(postSpy).toHaveBeenCalledTimes(2);
+    expect(postSpy.mock.calls[1][1]).toEqual(
+      expect.objectContaining({ 'p-ticket': 'tkt' }),
+    );
+  });
+});

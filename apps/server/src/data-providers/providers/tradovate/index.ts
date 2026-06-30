@@ -32,7 +32,11 @@ const HEARTBEAT_INTERVAL_MS = 2_500;
 const CONNECT_TIMEOUT_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 10_000;
 const HISTORY_TIMEOUT_MS = 15_000;
+const MAX_AUTH_ATTEMPTS = 3;
 const STREAM_TIMEFRAME = '1Min';
+
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 type PendingRequest = {
   resolve: (data: unknown) => void;
@@ -66,14 +70,14 @@ export class TradovateProvider implements DataProvider {
     const password = process.env.TRADOVATE_PASSWORD;
     const cid = process.env.TRADOVATE_CID;
     const sec = process.env.TRADOVATE_SECRET;
-    if (!name || !password || !cid || !sec) {
+    if (!name || !password) {
       throw new Error('Tradovate API credentials are not configured');
     }
     this.creds = {
       name,
       password,
-      cid: Number(cid),
-      sec,
+      cid: cid ? Number(cid) : undefined,
+      sec: sec || undefined,
       deviceId: process.env.TRADOVATE_DEVICE_ID,
       appId: process.env.TRADOVATE_APP_ID || 'Ticker',
       appVersion: process.env.TRADOVATE_APP_VERSION || '1.0',
@@ -225,34 +229,53 @@ export class TradovateProvider implements DataProvider {
   }
 
   private async getToken(): Promise<string> {
-    const response = await axios.post(
-      `${authBaseUrl(this.env)}/auth/accesstokenrequest`,
-      {
-        name: this.creds.name,
-        password: this.creds.password,
-        appId: this.creds.appId,
-        appVersion: this.creds.appVersion,
-        cid: this.creds.cid,
-        sec: this.creds.sec,
-        ...(this.creds.deviceId ? { deviceId: this.creds.deviceId } : {}),
-      },
-      { timeout: 10_000 },
-    );
-    const data = tradovateAccessTokenResponseSchema.parse(response.data);
-    const throttle = throttleError(data, 'authentication');
-    if (throttle) {
-      throw throttle;
-    }
-    if (data.errorText) {
-      throw new Error(`Tradovate authentication failed: ${data.errorText}`);
-    }
-    const value = data.mdAccessToken ?? data.accessToken;
-    if (!value) {
-      throw new Error(
-        'Tradovate authentication failed: no access token returned',
+    let body: Record<string, unknown> = {
+      name: this.creds.name,
+      password: this.creds.password,
+      appId: this.creds.appId,
+      appVersion: this.creds.appVersion,
+      ...(this.creds.cid !== undefined ? { cid: this.creds.cid } : {}),
+      ...(this.creds.sec ? { sec: this.creds.sec } : {}),
+      ...(this.creds.deviceId ? { deviceId: this.creds.deviceId } : {}),
+    };
+
+    for (let attempt = 1; attempt <= MAX_AUTH_ATTEMPTS; attempt++) {
+      const response = await axios.post(
+        `${authBaseUrl(this.env)}/auth/accesstokenrequest`,
+        body,
+        { timeout: 10_000 },
       );
+      const data = tradovateAccessTokenResponseSchema.parse(response.data);
+
+      if (data['p-ticket']) {
+        if (data['p-captcha']) {
+          throw new Error(
+            'Tradovate authentication requires a captcha; log in via the Tradovate app, or configure an API key (TRADOVATE_CID/TRADOVATE_SECRET) to avoid throttling.',
+          );
+        }
+        if (attempt === MAX_AUTH_ATTEMPTS) {
+          throw new Error(
+            `Tradovate authentication still throttled after ${MAX_AUTH_ATTEMPTS} attempts`,
+          );
+        }
+        await delay((data['p-time'] ?? 1) * 1000);
+        body = { ...body, 'p-ticket': data['p-ticket'] };
+        continue;
+      }
+
+      if (data.errorText) {
+        throw new Error(`Tradovate authentication failed: ${data.errorText}`);
+      }
+      const value = data.mdAccessToken ?? data.accessToken;
+      if (!value) {
+        throw new Error(
+          'Tradovate authentication failed: no access token returned',
+        );
+      }
+      return value;
     }
-    return value;
+
+    throw new Error('Tradovate authentication failed');
   }
 
   private handleFrame(

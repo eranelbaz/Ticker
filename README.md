@@ -43,8 +43,12 @@ To use Tradovate as the data provider (e.g. for E-mini / Micro futures like
 `MESU6`), set `MARKET_DATA_PROVIDER=tradovate` in `apps/server/.env` and provide
 your credentials:
 
-- `TRADOVATE_USERNAME`, `TRADOVATE_PASSWORD` — your account login.
-- `TRADOVATE_CID`, `TRADOVATE_SECRET` — API key pair (request API access from Tradovate).
+- `TRADOVATE_USERNAME`, `TRADOVATE_PASSWORD` — your account login (always required).
+- `TRADOVATE_CID`, `TRADOVATE_SECRET` — *optional* API key pair from Tradovate API
+  access. **Recommended** for reliable use: without a key, auth still works with just
+  your username/password, but Tradovate throttles credential-only requests with a time
+  penalty (and an occasional captcha that blocks until you log in via the Tradovate app).
+  The provider handles the penalty by waiting and retrying automatically.
 - `TRADOVATE_DEVICE_ID` — *optional* stable UUID; reduces captcha challenges but auth works without it.
 - `TRADOVATE_ENV` — `demo` (default) or `live`. Only the REST auth URL differs;
   the market-data WebSocket (`wss://md.tradovateapi.com/v1/websocket`) is shared.

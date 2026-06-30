@@ -22,8 +22,8 @@ export type TradovateEnv = 'demo' | 'live';
 export type TradovateCredentials = {
   name: string;
   password: string;
-  cid: number;
-  sec: string;
+  cid?: number;
+  sec?: string;
   deviceId?: string;
   appId: string;
   appVersion: string;
